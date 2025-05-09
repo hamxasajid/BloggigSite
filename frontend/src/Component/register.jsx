@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Use useNavigate instead of useHistory
+import { useNavigate, Link } from "react-router-dom";
+import "./register.css"; // Assuming you have a CSS file for styling
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,7 @@ const Register = () => {
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Initialize navigate for routing
+  const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
 
   const handleChange = (e) => {
@@ -23,7 +24,6 @@ const Register = () => {
     setMessage("");
     setLoading(true);
 
-    // Frontend validation for email, password, and confirmation
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
       setMessage("Please enter a valid email address.");
       setLoading(false);
@@ -52,7 +52,7 @@ const Register = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setMessage("Registration successful!");
+      setMessage("Registration successful! Redirecting to login...");
       setFormData({
         username: "",
         email: "",
@@ -61,10 +61,9 @@ const Register = () => {
         role: "user",
       });
 
-      // Navigate to /login after 1 second
       setTimeout(() => {
         navigate("/login");
-      }, 1000);
+      }, 1500);
     } catch (err) {
       setMessage(`Error: ${err.message}`);
     } finally {
@@ -73,84 +72,124 @@ const Register = () => {
   };
 
   return (
-    <div className="container py-5 min-vh-100" style={{ maxWidth: "500px" }}>
-      <h2 className="mb-4 text-center">Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Username</label>
-          <input
-            type="text"
-            className="form-control"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
+    <div className="auth-container d-flex align-items-center justify-content-center py-5 min-vh-100 bg-light">
+      <div
+        className="card shadow-sm border-0"
+        style={{ width: "100%", maxWidth: "450px" }}
+      >
+        <div className="card-body p-5">
+          <div className="text-center mb-4">
+            <h2 className="fw-bold text-primary">Create Account</h2>
+            <p className="text-muted">Join our community today</p>
+          </div>
+
+          {message && (
+            <div
+              className={`alert ${
+                message.includes("successful")
+                  ? "alert-success"
+                  : "alert-danger"
+              } mb-4`}
+            >
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="username" className="form-label">
+                Username
+              </label>
+              <input
+                type="text"
+                className="form-control py-2"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Enter your username"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">
+                Email Address
+              </label>
+              <input
+                type="email"
+                className="form-control py-2"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <input
+                type="password"
+                className="form-control py-2"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="At least 8 characters"
+              />
+              <div className="form-text">Must be at least 8 characters</div>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                className="form-control py-2"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                placeholder="Re-enter your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary w-100 py-2 fw-semibold"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Registering...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+
+          <div className="text-center mt-4">
+            <p className="small text-muted">
+              Already have an account?{" "}
+              <Link to="/login" className="text-decoration-none fw-semibold">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
-
-        <div className="mb-3">
-          <label>Email</label>
-          <input
-            type="email"
-            className="form-control"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label>Password</label>
-          <input
-            type="password"
-            className="form-control"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            className="form-control"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Submitting..." : "Register"}
-        </button>
-      </form>
-
-      {message && (
-        <p
-          className="mt-3 text-center"
-          style={{
-            color: message.includes("successful") ? "green" : "red",
-          }}
-        >
-          {message}
-        </p>
-      )}
-
-      <div className="text-center mt-3">
-        <p>
-          Already have an account?{" "}
-          <a href="/login" className="text-primary">
-            Login
-          </a>
-        </p>
       </div>
     </div>
   );
