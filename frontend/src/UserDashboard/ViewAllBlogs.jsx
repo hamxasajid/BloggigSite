@@ -6,11 +6,12 @@ const ViewAllBlogs = () => {
   const [blogs, setBlogs] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const url = "https://bloggigsite-production.up.railway.app";
 
   const fetchBlogs = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/user/blogs", {
+      const res = await axios.get(`${url}/api/user/blogs`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBlogs(res.data.blogs || []);
@@ -25,7 +26,7 @@ const ViewAllBlogs = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/blogs/${blogId}`, {
+      await axios.delete(`${url}/api/blogs/${blogId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

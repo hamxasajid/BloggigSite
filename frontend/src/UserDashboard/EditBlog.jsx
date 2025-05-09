@@ -20,12 +20,13 @@ const EditBlog = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
     const fetchBlog = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:5000/api/blogs/${id}`, {
+        const res = await axios.get(`${url}/api/blogs/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const blog = res.data;
@@ -115,15 +116,11 @@ const EditBlog = () => {
     };
 
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/blogs/${id}`,
-        updatedBlog,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.put(`${url}/api/blogs/${id}`, updatedBlog, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         setSuccess("Blog updated successfully!");
         navigate("/Userdashboard/viewallblogs");

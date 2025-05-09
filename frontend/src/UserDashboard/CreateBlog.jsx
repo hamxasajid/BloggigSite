@@ -19,6 +19,7 @@ const CreateBlog = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const url = "https://bloggigsite-production.up.railway.app";
 
   const calculateReadTime = (htmlContent) => {
     const text = htmlContent.replace(/<[^>]+>/g, ""); // remove HTML tags
@@ -101,15 +102,11 @@ const CreateBlog = () => {
     };
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/blogs",
-        formDataToSend,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.post(`${url}/api/blogs`, formDataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (res.status === 201) {
         setSuccess("Blog created successfully!");
