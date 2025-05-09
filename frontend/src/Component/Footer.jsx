@@ -43,27 +43,47 @@ const Footer = () => {
             <h5 className="fw-bold mb-3">Explore</h5>
             <ul className="nav flex-column">
               <li className="nav-item mb-2">
-                <Link to="/" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Home
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   All Posts
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/popular" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/popular"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Popular
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/authors" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/authors"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Authors
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/about" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/about"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   About Us
                 </Link>
               </li>
@@ -75,27 +95,47 @@ const Footer = () => {
             <h5 className="fw-bold mb-3">Topics</h5>
             <ul className="nav flex-column">
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Technology
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Science
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Culture
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Business
                 </Link>
               </li>
               <li className="nav-item mb-2">
-                <Link to="/blogs" className="nav-link p-0 text-white-50">
+                <Link
+                  to="/blogs"
+                  className="nav-link p-0 text-white-50"
+                  onClick={scrollToTop}
+                >
                   Opinion
                 </Link>
               </li>
@@ -161,16 +201,32 @@ const Footer = () => {
             </p>
           </div>
           <div className="d-flex gap-3">
-            <Link to="/privacy" className="text-white-50 text-decoration-none">
+            <Link
+              to="/privacy"
+              className="text-white-50 text-decoration-none"
+              onClick={scrollToTop}
+            >
               Privacy
             </Link>
-            <Link to="/terms" className="text-white-50 text-decoration-none">
+            <Link
+              to="/terms"
+              className="text-white-50 text-decoration-none"
+              onClick={scrollToTop}
+            >
               Terms
             </Link>
-            <Link to="/cookies" className="text-white-50 text-decoration-none">
+            <Link
+              to="/cookies"
+              className="text-white-50 text-decoration-none"
+              onClick={scrollToTop}
+            >
               Cookies
             </Link>
-            <Link to="/contact" className="text-white-50 text-decoration-none">
+            <Link
+              to="/contact"
+              className="text-white-50 text-decoration-none"
+              onClick={scrollToTop}
+            >
               Contact
             </Link>
           </div>
