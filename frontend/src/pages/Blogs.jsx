@@ -30,11 +30,15 @@ const Blogs = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-5">Loading...</div>;
+    return <div className="text-center py-5 min-vh-100">Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-5 text-danger">Error: {error}</div>;
+    return (
+      <div className="text-center py-5 min-vh-100 text-danger">
+        Error: {error}
+      </div>
+    );
   }
 
   return (
