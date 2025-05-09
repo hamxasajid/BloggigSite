@@ -5,12 +5,13 @@ const ManageUser = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const url = "https://bloggigsite-production.up.railway.app";
 
   // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/users");
+        const res = await axios.get(`${url}/api/users`);
         console.log("Fetched users:", res.data);
 
         if (Array.isArray(res.data)) {

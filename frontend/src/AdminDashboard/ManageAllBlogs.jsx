@@ -7,6 +7,7 @@ const ManageAllBlogs = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+  const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -19,7 +20,7 @@ const ManageAllBlogs = () => {
 
     // Fetch all blogs
     axios
-      .get("http://localhost:5000/api/blogs")
+      .get(`${url}/api/blogs`)
       .then((res) => {
         setBlogs(res.data || []);
         setLoading(false);
@@ -47,7 +48,7 @@ const ManageAllBlogs = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container py-5 min-vh-100">
       <h2 className="text-center mb-4">Manage All Blogs</h2>
 
       {error && <div className="alert alert-danger">{error}</div>}

@@ -20,12 +20,13 @@ const AdminEditBlog = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
     const fetchBlog = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:5000/api/blogs/${id}`, {
+        const res = await axios.get(`${url}/api/blogs/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const blog = res.data;
@@ -115,15 +116,11 @@ const AdminEditBlog = () => {
     };
 
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/blogs/${id}`,
-        updatedBlog,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.put(`${url}/api/blogs/${id}`, updatedBlog, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         setSuccess("Blog updated successfully!");
         navigate("/admin"); // Redirect to admin dashboard or a relevant page
@@ -137,7 +134,7 @@ const AdminEditBlog = () => {
   if (loading) return <div className="container mt-5">Loading...</div>;
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "700px" }}>
+    <div className="container py-5 min-vh-100" style={{ maxWidth: "700px" }}>
       <h2 className="mb-4">Edit Blog</h2>
 
       {error && <div className="alert alert-danger">{error}</div>}

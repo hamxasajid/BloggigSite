@@ -14,7 +14,7 @@ const AdminDash = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const url = "https://bloggigsite-production.up.railway.app/";
+  const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
