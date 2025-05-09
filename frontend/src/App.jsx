@@ -22,6 +22,10 @@ import AdminDash from "./AdminDashboard/AdminDash";
 import ManageAllBlogs from "./AdminDashboard/ManageAllBlogs";
 import AdminEditBlog from "./AdminDashboard/AdminEditBlog";
 import ManageUser from "./AdminDashboard/ManageUser";
+import Contact from "./pages/Contact";
+import Cookies from "./pages/Cookies";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 function App() {
   return (
@@ -31,6 +35,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/blogs" element={<Blogs />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/cookies" element={<Cookies />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
         <Route path="/Userdashboard" element={<UserDash />} />
