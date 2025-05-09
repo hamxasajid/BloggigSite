@@ -222,7 +222,7 @@ const CreateBlog = () => {
         </div>
 
         {/* Allow Comments */}
-        <div className="form-check mb-3">
+        <div className="form-check mb-3 mt-3">
           <input
             type="checkbox"
             className="form-check-input"
