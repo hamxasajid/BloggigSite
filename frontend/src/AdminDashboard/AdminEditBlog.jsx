@@ -23,6 +23,22 @@ const AdminEditBlog = () => {
   const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser.role === "admin") {
+        // setAdminData(parsedUser); // Removed as it is not defined
+        // fetchStats(); // Removed as it is not defined
+      } else {
+        navigate("/login");
+      }
+    } else {
+      navigate("/login");
+    }
+    setLoading(false);
+  }, [navigate]);
+
+  useEffect(() => {
     const fetchBlog = async () => {
       try {
         const token = localStorage.getItem("token");

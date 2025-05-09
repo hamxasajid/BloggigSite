@@ -8,6 +8,16 @@ const ViewAllBlogs = () => {
   const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      // Removed unused setUserData call
+    } else {
+      navigate("/login");
+    }
+    // Removed unused setLoading call
+  }, [navigate]);
+
   const fetchBlogs = async () => {
     try {
       const token = localStorage.getItem("token");

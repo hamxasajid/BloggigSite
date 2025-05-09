@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
@@ -17,6 +17,8 @@ const CreateBlog = () => {
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  // Removed unused userData state
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
@@ -27,6 +29,16 @@ const CreateBlog = () => {
     const readTime = Math.ceil(words / 200); // average 200 wpm
     return readTime;
   };
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      // Removed unused setUserData call
+    } else {
+      navigate("/login");
+    }
+    setLoading(false);
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

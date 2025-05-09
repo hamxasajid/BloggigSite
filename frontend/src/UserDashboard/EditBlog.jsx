@@ -23,6 +23,16 @@ const EditBlog = () => {
   const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      // Removed unused setUserData call
+    } else {
+      navigate("/login");
+    }
+    setLoading(false);
+  }, [navigate]);
+
+  useEffect(() => {
     const fetchBlog = async () => {
       try {
         const token = localStorage.getItem("token");

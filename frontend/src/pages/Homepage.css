@@ -1,0 +1,19 @@
+.hero-section {
+  background: linear-gradient(
+      135deg,
+      rgba(13, 110, 253, 0.9),
+      rgba(0, 86, 179, 0.9)
+    ),
+    url("https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
