@@ -27,6 +27,10 @@ const Home = () => {
       });
   }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const truncateContent = (html, maxLength = 100) => {
     const div = document.createElement("div");
     div.innerHTML = html;
@@ -40,17 +44,17 @@ const Home = () => {
       <section className="hero-section bg-primary text-white py-5 min-vh-100">
         <div className="container py-5">
           <div className="row justify-content-center py-lg-5">
-            <div className="col-lg-8 text-center">
+            <div className="col-lg-8 text-center gap-4">
               <h1 className="display-4 fw-bold mb-4">The Post</h1>
               <p className="lead mb-4">
                 A Platform for Curious Minds, Where Ideas Unfold
               </p>
-              <Link to="/blogs" className="btn btn-light btn-lg px-4 me-2">
+              <Link to="/blogs" className="btn btn-light btn-lg px-4 me-2 mb-2">
                 Explore All Posts
               </Link>
               <Link
                 to="/Userdashboard/createblog"
-                className="btn btn-outline-light btn-lg px-4"
+                className="btn btn-outline-light btn-lg px-4 mb-2"
               >
                 Write a Post
               </Link>
@@ -87,14 +91,14 @@ const Home = () => {
                 <div className="card h-100 border-0 shadow-sm overflow-hidden">
                   <div
                     className="card-img-top overflow-hidden"
-                    style={{ height: "200px" }}
+                    style={{ height: "250px" }}
                   >
                     <img
                       src={
                         post.coverImage ||
                         "https://via.placeholder.com/800x450?text=Blog+Image"
                       }
-                      className="img-fluid w-100 h-100 object-fit-cover"
+                      className="img-fluid w-100 object-fit-contain"
                       alt={post.title}
                     />
                   </div>
@@ -114,6 +118,7 @@ const Home = () => {
                     <Link
                       to={`/blog/${post._id}`}
                       className="btn btn-outline-primary w-100"
+                      onClick={scrollToTop}
                     >
                       Read More
                     </Link>
@@ -125,7 +130,11 @@ const Home = () => {
 
           {!loading && !error && latestPosts.length > 0 && (
             <div className="text-center mt-5">
-              <Link to="/blogs" className="btn btn-primary px-4">
+              <Link
+                to="/blogs"
+                className="btn btn-primary px-4"
+                onClick={scrollToTop}
+              >
                 View All Posts
               </Link>
             </div>
@@ -142,7 +151,11 @@ const Home = () => {
               <p className="lead text-muted mb-4">
                 Join our community of writers and readers today.
               </p>
-              <Link to="/signup" className="btn btn-primary btn-lg px-4">
+              <Link
+                to="/signup"
+                className="btn btn-primary btn-lg px-4"
+                onClick={scrollToTop}
+              >
                 Get Started
               </Link>
             </div>

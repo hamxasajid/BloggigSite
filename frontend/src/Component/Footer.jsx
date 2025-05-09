@@ -143,7 +143,7 @@ const Footer = () => {
           </div>
 
           {/* Contact Info */}
-          <div className="col-lg-4 col-md-6">
+          <div className="col-lg-4 col-md-6 ">
             <h5 className="fw-bold mb-3">Connect</h5>
             <ul className="nav flex-column">
               <li className="d-flex align-items-center mb-3">
@@ -164,7 +164,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-            <div className="social-links">
+            <div className="social-links ">
               <h6 className="mb-3">Follow The Post</h6>
               <div className="d-flex gap-3">
                 <a href="#" className="text-white fs-5" aria-label="Twitter">
@@ -188,7 +188,7 @@ const Footer = () => {
 
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
           <div className="mb-3 mb-md-0">
-            <p className="text-white-50 mb-0">
+            <p className="text-white-50 mb-0 text-center text-md-start">
               &copy; {currentYear} The Post. All rights reserved. Developed by{" "}
               <a
                 href="https://hamzasajid.netlify.app/"
@@ -200,7 +200,7 @@ const Footer = () => {
               </a>
             </p>
           </div>
-          <div className="d-flex gap-3">
+          <div className="d-flex gap-3 text-center text-md-end">
             <Link
               to="/privacy"
               className="text-white-50 text-decoration-none"

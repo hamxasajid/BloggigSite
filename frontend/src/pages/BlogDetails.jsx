@@ -274,7 +274,6 @@ const BlogDetails = () => {
                   src={blog.coverImage}
                   alt={blog.title}
                   style={{
-                    aspectRatio: "16/9",
                     width: "100%",
                     height: "100%",
                     flexShrink: 0,

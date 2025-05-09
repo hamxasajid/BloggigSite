@@ -22,6 +22,10 @@ const Blogs = () => {
       });
   }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const truncateContent = (html, maxLength = 100) => {
     const div = document.createElement("div");
     div.innerHTML = html;
@@ -57,7 +61,6 @@ const Blogs = () => {
                     className="card-img-top"
                     alt={post.title}
                     style={{
-                      aspectRatio: "16/9",
                       borderTopLeftRadius: "calc(0.25rem - 1px)",
                       borderTopRightRadius: "calc(0.25rem - 1px)",
                     }}
@@ -137,6 +140,7 @@ const Blogs = () => {
                     <Link
                       to={`/blog/${post._id}`}
                       className="btn btn-sm btn-outline-primary w-100"
+                      onClick={scrollToTop}
                     >
                       Read More <i className="fas fa-arrow-right ms-1"></i>
                     </Link>
