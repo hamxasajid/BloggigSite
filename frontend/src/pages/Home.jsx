@@ -7,10 +7,11 @@ const Home = () => {
   const [latestPosts, setLatestPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const url = "https://bloggigsite-production.up.railway.app";
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/blogs")
+      .get(`${url}/api/blogs`)
       .then((response) => {
         const published = response.data
           .filter((post) => post.status === "published")

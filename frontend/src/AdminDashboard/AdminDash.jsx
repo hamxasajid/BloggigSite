@@ -50,8 +50,8 @@ const AdminDash = () => {
       setStatsLoading(true);
 
       const [usersRes, blogsRes] = await Promise.all([
-        axios.get(`${url}api/users`),
-        axios.get(`${url}api/blogs`),
+        axios.get(`${url}/api/users`),
+        axios.get(`${url}/api/blogs`),
       ]);
 
       const totalUsers = usersRes.data.length;

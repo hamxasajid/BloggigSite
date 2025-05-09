@@ -32,21 +32,20 @@ const BlogDetails = () => {
   const [user, setUser] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const url = "https://bloggigsite-production.up.railway.app";
 
   const COMMENTS_PER_PAGE = 3;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const blogRes = await axios.get(
-          `http://localhost:5000/api/blogs/${id}`
-        );
+        const blogRes = await axios.get(`${url}/api/blogs/${id}`);
         setBlog(blogRes.data);
         setLikes(blogRes.data.likes || 0);
 
         if (blogRes.data.allowComments) {
           const commentsRes = await axios.get(
-            `http://localhost:5000/api/blogs/${id}/comments`
+            `${url}/api/blogs/${id}/comments`
           );
           setComments(commentsRes.data);
         }
@@ -75,15 +74,12 @@ const BlogDetails = () => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/blogs/${id}/comments`,
-        {
-          name: user.username,
-          email: user.email,
-          text: newComment,
-          isReply: false,
-        }
-      );
+      const response = await axios.post(`${url}/api/blogs/${id}/comments`, {
+        name: user.username,
+        email: user.email,
+        text: newComment,
+        isReply: false,
+      });
       setComments([response.data, ...comments]);
       setNewComment("");
       setCurrentPage(1);
@@ -97,7 +93,7 @@ const BlogDetails = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/blogs/${id}/comments/${parentCommentId}/replies`,
+        `${url}/api/blogs/${id}/comments/${parentCommentId}/replies`,
         {
           name: user.username,
           email: user.email,
@@ -127,7 +123,7 @@ const BlogDetails = () => {
   const handleLikeComment = async (commentId) => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/blogs/${id}/comments/${commentId}/like`,
+        `${url}/api/blogs/${id}/comments/${commentId}/like`,
         {
           userId: user._id, // ✅ Send userId here
         }
@@ -182,7 +178,7 @@ const BlogDetails = () => {
       }
       localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
 
-      await axios.post(`http://localhost:5000/api/blogs/${id}/like`, {
+      await axios.post(`${url}/api/blogs/${id}/like`, {
         action: action,
       });
     } catch {

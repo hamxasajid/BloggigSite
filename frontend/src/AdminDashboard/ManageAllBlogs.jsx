@@ -36,7 +36,7 @@ const ManageAllBlogs = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/blogs/${blogId}`, {
+      await axios.delete(`${url}/api/blogs/${blogId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

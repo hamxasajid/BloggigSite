@@ -34,7 +34,7 @@ const ManageUser = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/users/${id}`);
+        await axios.delete(`${url}/api/users/${id}`);
         setUsers((prevUsers) => prevUsers.filter((user) => user._id !== id));
       } catch (err) {
         console.error("Error deleting user:", err);
