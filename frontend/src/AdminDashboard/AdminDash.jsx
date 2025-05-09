@@ -14,6 +14,8 @@ const AdminDash = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const url = "https://bloggigsite-production.up.railway.app/";
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -34,7 +36,7 @@ const AdminDash = () => {
     const intervalId = setInterval(() => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
-        axios.post("http://localhost:5000/update-last-active", {
+        axios.post(`${url}/update-last-active`, {
           userId: user._id,
         });
       }
@@ -48,8 +50,8 @@ const AdminDash = () => {
       setStatsLoading(true);
 
       const [usersRes, blogsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/users"),
-        axios.get("http://localhost:5000/api/blogs"),
+        axios.get(`${url}api/users`),
+        axios.get(`${url}api/blogs`),
       ]);
 
       const totalUsers = usersRes.data.length;
@@ -67,12 +69,9 @@ const AdminDash = () => {
 
       // Find users active in the last 10 minutes
       const twoMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-      const activeUsersRes = await axios.get(
-        "http://localhost:5000/active-users",
-        {
-          params: { lastActive: twoMinutesAgo.toISOString() },
-        }
-      );
+      const activeUsersRes = await axios.get(`${url}/active-users`, {
+        params: { lastActive: twoMinutesAgo.toISOString() },
+      });
       const activeUsers = activeUsersRes.data.count;
 
       setStats({
