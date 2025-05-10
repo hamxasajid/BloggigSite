@@ -1,6 +1,62 @@
-import React from "react";
+import React, { useRef, useState } from "react";
+import emailjs from "emailjs-com";
+import Swal from "sweetalert2";
 
 const Contact = () => {
+  const form = useRef();
+  const [sending, setSending] = useState(false);
+  const url = "https://bloggigsite-production.up.railway.app";
+
+  const sendEmail = async (e) => {
+    e.preventDefault();
+    setSending(true);
+
+    const formData = {
+      from_name: form.current.from_name.value,
+      from_email: form.current.from_email.value,
+      subject: form.current.subject.value,
+      message: form.current.message.value,
+    };
+
+    try {
+      // Send to your backend (MongoDB, Firebase, etc.)
+      await fetch(`${url}/contact-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Send using EmailJS
+      await emailjs.sendForm(
+        "service_a8z15ll",
+        "template_y8hetuj",
+        form.current,
+        "tksCvjtmdoFXZ21AE"
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Message Sent!",
+        text: "Thank you for contacting us. We’ll get back to you shortly.",
+        confirmButtonColor: "#1C45C1",
+      });
+
+      form.current.reset();
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to send message. Please try again later.",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <section className="py-5 bg-light">
       <div className="container">
@@ -18,7 +74,7 @@ const Contact = () => {
                 <i className="bi bi-geo-alt-fill"></i>
               </div>
               <h6 className="fw-semibold mb-1">Location</h6>
-              <p className="text-muted small mb-0">New York, NY</p>
+              <p className="text-muted small mb-0">Lahore, Punjab Pakistan</p>
             </div>
           </div>
           <div className="col-md-4">
@@ -27,7 +83,7 @@ const Contact = () => {
                 <i className="bi bi-envelope-fill"></i>
               </div>
               <h6 className="fw-semibold mb-1">Email Us</h6>
-              <p className="text-muted small mb-0">contact@thepost.com</p>
+              <p className="text-muted small mb-0">connect.thepost@gmail.com</p>
             </div>
           </div>
           <div className="col-md-4">
@@ -36,17 +92,16 @@ const Contact = () => {
                 <i className="bi bi-person-fill"></i>
               </div>
               <h6 className="fw-semibold mb-1">Write for Us</h6>
-              <p className="text-muted small mb-0">contributors@thepost.com</p>
+              <p className="text-muted small mb-0">connect.thepost@gmail.com</p>
             </div>
           </div>
         </div>
-
         <div className="row justify-content-center">
           <div className="col-lg-8">
             <div className="card border-0 shadow-sm">
               <div className="card-body p-4 p-md-5">
                 <h3 className="fw-bold mb-4">Send a Message</h3>
-                <form>
+                <form ref={form} onSubmit={sendEmail}>
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label htmlFor="name" className="form-label">
@@ -54,6 +109,7 @@ const Contact = () => {
                       </label>
                       <input
                         type="text"
+                        name="from_name"
                         className="form-control"
                         id="name"
                         placeholder="John Doe"
@@ -66,6 +122,7 @@ const Contact = () => {
                       </label>
                       <input
                         type="email"
+                        name="from_email"
                         className="form-control"
                         id="email"
                         placeholder="john@example.com"
@@ -78,6 +135,7 @@ const Contact = () => {
                       </label>
                       <input
                         type="text"
+                        name="subject"
                         className="form-control"
                         id="subject"
                         placeholder="Subject of your message"
@@ -89,6 +147,7 @@ const Contact = () => {
                         Message
                       </label>
                       <textarea
+                        name="message"
                         className="form-control"
                         id="message"
                         rows="5"
@@ -97,8 +156,12 @@ const Contact = () => {
                       ></textarea>
                     </div>
                     <div className="col-12 text-end">
-                      <button type="submit" className="btn btn-primary px-4">
-                        Send Message
+                      <button
+                        type="submit"
+                        className="btn btn-primary px-4"
+                        disabled={sending}
+                      >
+                        {sending ? "Sending..." : "Send Message"}
                       </button>
                     </div>
                   </div>

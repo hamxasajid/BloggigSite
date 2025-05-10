@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const User = require("./models/User");
 const Blog = require("./models/blogModel");
 const Comment = require("./models/comments");
+const Contact = require("./models/Contact");
 const authenticateToken = require("./middleware/authenticateToken");
 
 dotenv.config();
@@ -329,6 +330,17 @@ app.post("/api/blogs/:id/like", async (req, res) => {
     res.json({ likes: blog.likes });
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+// contact form data
+app.post("/contact-data", async (req, res) => {
+  try {
+    const contact = new Contact(req.body);
+    await contact.save();
+    res.status(201).json({ message: "Saved to DB" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to save data" });
   }
 });
 

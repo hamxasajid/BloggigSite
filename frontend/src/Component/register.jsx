@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import emailjs from "@emailjs/browser";
+
 import "./register.css"; // Assuming you have a CSS file for styling
 
 const Register = () => {
@@ -52,7 +54,19 @@ const Register = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setMessage("Registration successful! Redirecting to login...");
+      // ✅ Send welcome email via EmailJS
+      await emailjs.send(
+        "service_z3hby28",
+        "template_mbeauia",
+        {
+          username: formData.username,
+          email: formData.email,
+        },
+        "ypG_93Enakfn2cUf4"
+      );
+
+      // Clear form and navigate
+      setMessage("Registration successful! Redirecting...");
       setFormData({
         username: "",
         email: "",
