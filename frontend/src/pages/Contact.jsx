@@ -12,8 +12,8 @@ const Contact = () => {
     setSending(true);
 
     const formData = {
-      from_name: form.current.from_name.value,
-      from_email: form.current.from_email.value,
+      name: form.current.from_name.value, // Send as 'name' instead of 'from_name'
+      email: form.current.from_email.value, // Send as 'email' instead of 'from_email'
       subject: form.current.subject.value,
       message: form.current.message.value,
     };

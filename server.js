@@ -336,11 +336,34 @@ app.post("/api/blogs/:id/like", async (req, res) => {
 // contact form data
 app.post("/contact-data", async (req, res) => {
   try {
-    const contact = new Contact(req.body);
+    const { from_name, from_email, subject, message } = req.body;
+
+    if (!from_name || !from_email) {
+      return res.status(400).json({ error: "Name and email are required" });
+    }
+
+    const contact = new Contact({
+      name: from_name,
+      email: from_email,
+      subject,
+      message,
+    });
+
     await contact.save();
     res.status(201).json({ message: "Saved to DB" });
   } catch (error) {
+    console.error("Database save error:", error);
     res.status(500).json({ error: "Failed to save data" });
+  }
+});
+
+// Get all contact form messages
+app.get("/contact-data", async (req, res) => {
+  try {
+    const messages = await Contact.find(); // Assuming Contact is your Mongoose model
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
 

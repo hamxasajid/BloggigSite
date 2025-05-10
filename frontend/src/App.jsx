@@ -26,6 +26,7 @@ import Contact from "./pages/Contact";
 import Cookies from "./pages/Cookies";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Message from "./AdminDashboard/Message";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
         />
         <Route path="/admin/editblog/:id" element={<AdminEditBlog />} />
         <Route path="/Admindashboard/manageusers" element={<ManageUser />} />
+        <Route path="/Admindashboard/messages" element={<Message />} />
       </Routes>
       <Footer />
     </BrowserRouter>

@@ -193,6 +193,14 @@ const AdminDash = () => {
           color="danger"
           icon={<FaUsers className="me-2" />}
         />
+
+        <DashboardCard
+          title="Messages"
+          desc="View and respond to user messages."
+          link="/Admindashboard/messages"
+          color="warning"
+          icon={<FaUsers className="me-2" />}
+        />
       </div>
     </div>
   );
