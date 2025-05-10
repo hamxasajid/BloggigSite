@@ -11,24 +11,25 @@ const Contact = () => {
     e.preventDefault();
     setSending(true);
 
+    // Use original field names (matches EmailJS template)
     const formData = {
-      name: form.current.from_name.value, // Send as 'name' instead of 'from_name'
-      email: form.current.from_email.value, // Send as 'email' instead of 'from_email'
+      from_name: form.current.from_name.value,
+      from_email: form.current.from_email.value,
       subject: form.current.subject.value,
       message: form.current.message.value,
     };
 
     try {
-      // Send to your backend (MongoDB, Firebase, etc.)
-      await fetch(`${url}/contact-data`, {
+      // Send to backend
+      const response = await fetch(`${url}/contact-data`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // Send using EmailJS
+      if (!response.ok) throw new Error("Backend save failed");
+
+      // Send email via EmailJS (uses form ref directly)
       await emailjs.sendForm(
         "service_a8z15ll",
         "template_y8hetuj",
@@ -39,17 +40,17 @@ const Contact = () => {
       Swal.fire({
         icon: "success",
         title: "Message Sent!",
-        text: "Thank you for contacting us. We’ll get back to you shortly.",
+        text: "Thank you for contacting us. We'll respond shortly.",
         confirmButtonColor: "#1C45C1",
       });
 
       form.current.reset();
     } catch (error) {
-      console.error(error);
+      console.error("Submission error:", error);
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to send message. Please try again later.",
+        title: "Failed",
+        text: "Message could not be sent. Please try again.",
         confirmButtonColor: "#d33",
       });
     } finally {

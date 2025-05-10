@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUsers, FaBlog, FaUserClock } from "react-icons/fa";
+import { FaUsers, FaBlog, FaUserClock, FaEnvelope } from "react-icons/fa";
 
 const AdminDash = () => {
   const [adminData, setAdminData] = useState(null);
@@ -12,6 +12,7 @@ const AdminDash = () => {
     totalBlogs: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
   const navigate = useNavigate();
 
   const url = "https://bloggigsite-production.up.railway.app";
@@ -23,6 +24,7 @@ const AdminDash = () => {
       if (parsedUser.role === "admin") {
         setAdminData(parsedUser);
         fetchStats();
+        fetchNewMessagesCount();
       } else {
         navigate("/login");
       }
@@ -31,6 +33,18 @@ const AdminDash = () => {
     }
     setLoading(false);
   }, [navigate]);
+
+  const fetchNewMessagesCount = async () => {
+    try {
+      const response = await axios.get(`${url}/contact-data`);
+      const newMessages = response.data.filter(
+        (msg) => msg.status === "new" || !msg.status
+      );
+      setNewMessagesCount(newMessages.length);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -199,7 +213,8 @@ const AdminDash = () => {
           desc="View and respond to user messages."
           link="/Admindashboard/messages"
           color="warning"
-          icon={<FaUsers className="me-2" />}
+          icon={<FaEnvelope className="me-2" />}
+          badgeCount={newMessagesCount}
         />
       </div>
     </div>
@@ -230,9 +245,17 @@ const StatCard = ({ title, value, loading, color, icon, helpText }) => (
   </div>
 );
 
-const DashboardCard = ({ title, desc, link, color, icon }) => (
+const DashboardCard = ({ title, desc, link, color, icon, badgeCount }) => (
   <div className="col-md-6 col-lg-4">
-    <div className="card h-100 border-0 shadow-sm">
+    <div className="card h-100 border-0 shadow-sm position-relative">
+      {badgeCount > 0 && (
+        <span
+          className="position-absolute top-0 end-0 badge rounded-pill bg-danger"
+          style={{ transform: "translate(-50%, 50%)" }}
+        >
+          {badgeCount}
+        </span>
+      )}
       <div className="card-body">
         <h5 className="card-title">
           {icon}

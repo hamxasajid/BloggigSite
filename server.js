@@ -333,14 +333,9 @@ app.post("/api/blogs/:id/like", async (req, res) => {
   }
 });
 
-// contact form data
 app.post("/contact-data", async (req, res) => {
   try {
     const { from_name, from_email, subject, message } = req.body;
-
-    if (!from_name || !from_email) {
-      return res.status(400).json({ error: "Name and email are required" });
-    }
 
     const contact = new Contact({
       name: from_name,
@@ -350,23 +345,46 @@ app.post("/contact-data", async (req, res) => {
     });
 
     await contact.save();
-    res.status(201).json({ message: "Saved to DB" });
+    res.status(201).json({ message: "Message saved successfully" });
   } catch (error) {
-    console.error("Database save error:", error);
+    console.error("Database error:", error);
     res.status(500).json({ error: "Failed to save data" });
   }
 });
 
-// Get all contact form messages
 app.get("/contact-data", async (req, res) => {
   try {
-    const messages = await Contact.find(); // Assuming Contact is your Mongoose model
+    const messages = await Contact.find().sort({ createdAt: -1 });
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
 
+// Update message status
+app.patch("/contact-data/:id", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const message = await Contact.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update message" });
+  }
+});
+
+// Delete message
+app.delete("/contact-data/:id", async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ message: "Message deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete message" });
+  }
+});
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
