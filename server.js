@@ -133,7 +133,7 @@ app.get("/api/users", async (req, res) => {
       query.lastActive = { $gte: new Date(lastActive) };
     }
 
-    const users = await User.find(query); // Apply filter if present
+    const users = await User.find(query);
     res.json(users);
   } catch (err) {
     res
@@ -166,15 +166,17 @@ app.post("/api/blogs", protect, async (req, res) => {
   }
 });
 
-// READ ALL Blogs with populated username
 app.get("/api/blogs", async (req, res) => {
   try {
     const blogs = await Blog.find()
-      .populate("user", "username") // Only populate the username
+      .populate("user", "username")
       .sort({ createdAt: -1 });
     res.json(blogs);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch blogs" });
+    console.error("Error fetching blogs:", error); // Log detailed error
+    res
+      .status(500)
+      .json({ error: "Failed to fetch blogs", details: error.message });
   }
 });
 
@@ -475,3 +477,5 @@ app.put("/users/:id", async (req, res) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+////////////////////////////////////
