@@ -131,7 +131,7 @@ const UserDash = () => {
         }
 
         // Fetch user data
-        const userResponse = await axios.get(`${url}/api/me`, {
+        const userResponse = await axios.get(`${url}/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
