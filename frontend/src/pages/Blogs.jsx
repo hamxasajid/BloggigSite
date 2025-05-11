@@ -178,7 +178,6 @@ const Blogs = () => {
                       className="card-img-top"
                       alt={post.title}
                       style={{
-                        height: "200px",
                         objectFit: "cover",
                         borderTopLeftRadius: "calc(0.25rem - 1px)",
                         borderTopRightRadius: "calc(0.25rem - 1px)",

@@ -7,11 +7,13 @@ import {
   FaPhone,
   FaGraduationCap,
   FaCamera,
+  FaSpinner,
+  FaClock,
 } from "react-icons/fa";
 
 const CompleteProfile = () => {
   const [userData, setUserData] = useState({
-    name: "",
+    username: "",
     email: "",
     phone: "",
     about: "",
@@ -23,30 +25,48 @@ const CompleteProfile = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [justSubmittedRoleRequest, setJustSubmittedRoleRequest] =
+    useState(false);
+
   const navigate = useNavigate();
+  const url = "https://bloggigsite-production.up.railway.app";
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/login");
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(
-          "https://bloggigsite-production.up.railway.app/api/users/me",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${url}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const role = response.data.role || "user";
 
         setUserData({
-          name: response.data.name || response.data.username,
+          username: response.data.username || "",
           email: response.data.email,
           phone: response.data.phone || "",
           about: response.data.about || "",
           education: response.data.education || "",
-          role: response.data.role || "user",
+          role,
           profilePicture: response.data.profilePicture || "",
         });
-      } catch (err) {
-        console.error("Error fetching user data:", err);
+
+        setJustSubmittedRoleRequest(role === "Pending");
+
+        // Show a one-time "Author approved" success message
+        if (
+          role === "author" &&
+          !localStorage.getItem("authorApprovedMsgShown")
+        ) {
+          setSuccess("Your Author request was approved!");
+          localStorage.setItem("authorApprovedMsgShown", "true");
+        }
+      } catch {
         setError("Failed to load user data");
       } finally {
         setLoading(false);
@@ -67,12 +87,12 @@ const CompleteProfile = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "bloggig_profile"); // Replace with your Cloudinary upload preset
+    formData.append("upload_preset", "my_upload_preset");
 
     try {
       setUploading(true);
       const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload", // Replace with your Cloudinary cloud name
+        "https://api.cloudinary.com/v1_1/dr46wo7mq/image/upload",
         formData
       );
 
@@ -82,8 +102,7 @@ const CompleteProfile = () => {
       }));
       setSuccess("Profile picture uploaded successfully");
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      console.error("Error uploading image:", err);
+    } catch {
       setError("Failed to upload profile picture");
       setTimeout(() => setError(""), 3000);
     } finally {
@@ -96,27 +115,36 @@ const CompleteProfile = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        "https://bloggigsite-production.up.railway.app/api/users/profile",
-        userData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const dataToSend = { ...userData };
 
-      // Update local storage with new user data
+      const isRequestingAuthor = dataToSend.role === "Pending";
+
+      const response = await axios.put(`${url}/profile`, dataToSend, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       const updatedUser = {
         ...JSON.parse(localStorage.getItem("user")),
-        ...userData,
+        ...response.data,
       };
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      setSuccess("Profile updated successfully!");
-      setTimeout(() => {
-        setSuccess("");
-        navigate("/userdashboard");
-      }, 2000);
+      if (isRequestingAuthor) {
+        setSuccess(
+          "Author request submitted! Your role will be updated after approval."
+        );
+        setJustSubmittedRoleRequest(true);
+      } else {
+        setSuccess("Profile updated successfully!");
+        setJustSubmittedRoleRequest(false);
+      }
+
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      console.error("Error updating profile:", err);
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(
+        err.response?.data?.message ||
+          "Failed to update profile. Please try again."
+      );
       setTimeout(() => setError(""), 3000);
     }
   };
@@ -140,20 +168,11 @@ const CompleteProfile = () => {
               <h3 className="mb-0">Complete Your Profile</h3>
             </div>
             <div className="card-body">
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="alert alert-success" role="alert">
-                  {success}
-                </div>
-              )}
+              {error && <div className="alert alert-danger">{error}</div>}
+              {success && <div className="alert alert-success">{success}</div>}
 
               <form onSubmit={handleSubmit}>
                 <div className="row">
-                  {/* Profile Picture */}
                   <div className="col-md-4 mb-4 text-center">
                     <div className="position-relative">
                       {userData.profilePicture ? (
@@ -189,24 +208,24 @@ const CompleteProfile = () => {
                     </div>
                     {uploading && (
                       <div className="text-center mt-2">
+                        <FaSpinner className="fa-spin me-2" />
                         <small className="text-muted">Uploading...</small>
                       </div>
                     )}
                   </div>
 
-                  {/* Profile Details */}
                   <div className="col-md-8">
                     <div className="mb-3">
-                      <label htmlFor="name" className="form-label">
+                      <label htmlFor="username" className="form-label">
                         <FaUser className="me-2" />
-                        Full Name
+                        Username
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="name"
-                        name="name"
-                        value={userData.name}
+                        id="username"
+                        name="username"
+                        value={userData.username}
                         onChange={handleInputChange}
                         required
                       />
@@ -223,48 +242,42 @@ const CompleteProfile = () => {
                         id="email"
                         name="email"
                         value={userData.email}
-                        onChange={handleInputChange}
                         disabled
                       />
-                      <small className="text-muted">
-                        Contact admin to change email
-                      </small>
                     </div>
 
                     <div className="mb-3">
                       <label htmlFor="phone" className="form-label">
                         <FaPhone className="me-2" />
-                        Phone Number
+                        Phone
                       </label>
                       <input
-                        type="tel"
+                        type="text"
                         className="form-control"
                         id="phone"
                         name="phone"
                         value={userData.phone}
                         onChange={handleInputChange}
-                        pattern="[0-9]{10}"
-                        title="10 digit phone number"
                       />
                     </div>
 
                     <div className="mb-3">
                       <label htmlFor="about" className="form-label">
+                        <FaGraduationCap className="me-2" />
                         About You
                       </label>
                       <textarea
                         className="form-control"
                         id="about"
                         name="about"
-                        rows="3"
+                        rows="4"
                         value={userData.about}
                         onChange={handleInputChange}
-                      />
+                      ></textarea>
                     </div>
 
                     <div className="mb-3">
                       <label htmlFor="education" className="form-label">
-                        <FaGraduationCap className="me-2" />
                         Education
                       </label>
                       <input
@@ -274,38 +287,45 @@ const CompleteProfile = () => {
                         name="education"
                         value={userData.education}
                         onChange={handleInputChange}
-                        placeholder="e.g., BSc Computer Science"
                       />
                     </div>
 
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <label htmlFor="role" className="form-label">
-                        Account Type
+                        Role
                       </label>
                       <select
-                        className="form-select"
+                        className="form-control"
                         id="role"
                         name="role"
                         value={userData.role}
                         onChange={handleInputChange}
+                        disabled={
+                          userData.role === "Pending" ||
+                          userData.role === "author"
+                        }
                       >
-                        <option value="user">Regular User</option>
-                        <option value="author">
-                          Author (Can publish blogs)
-                        </option>
+                        <option value="user">User</option>
+                        <option value="Pending">Author</option>
                       </select>
+
+                      {justSubmittedRoleRequest &&
+                        userData.role === "Pending" && (
+                          <div className="alert alert-warning mt-2">
+                            <FaClock className="me-2" />
+                            Your request to become an Author is pending
+                            approval.
+                          </div>
+                        )}
                     </div>
 
-                    <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <div className="mb-3">
                       <button
-                        type="button"
-                        className="btn btn-outline-secondary me-md-2"
-                        onClick={() => navigate("/userdashboard")}
+                        type="submit"
+                        className="btn btn-primary w-100"
+                        disabled={uploading}
                       >
-                        Cancel
-                      </button>
-                      <button type="submit" className="btn btn-primary">
-                        Save Profile
+                        Update Profile
                       </button>
                     </div>
                   </div>

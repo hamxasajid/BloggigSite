@@ -56,6 +56,27 @@ const ManageUser = () => {
     }
   };
 
+  // Handle Role Update (Toggle Pending to Author)
+  const handleRoleUpdate = async (id) => {
+    try {
+      const userToUpdate = users.find((user) => user._id === id);
+      if (userToUpdate.role === "Pending") {
+        const updatedUser = { ...userToUpdate, role: "author" };
+        await axios.put(`${url}/api/users/${id}`, updatedUser);
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user._id === id ? { ...user, role: "author" } : user
+          )
+        );
+      } else {
+        alert("User is not in pending status.");
+      }
+    } catch (err) {
+      console.error("Error updating role:", err);
+      setError("Failed to update role. Please try again.");
+    }
+  };
+
   // Filter users based on search and role filter
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -268,69 +289,39 @@ const ManageUser = () => {
       ) : (
         <>
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
+            <table className="table align-middle">
               <thead className="table-light">
                 <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">User</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Joined</th>
-                  <th scope="col">Actions</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {currentUsers.map((user, index) => (
-                  <tr key={user._id}>
-                    <th scope="row">
-                      {(currentPage - 1) * usersPerPage + index + 1}
-                    </th>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="flex-shrink-0 me-2">
-                          {user.role === "admin" ? (
-                            <FaUserShield className="text-primary" />
-                          ) : (
-                            <FaUser className="text-secondary" />
-                          )}
-                        </div>
-                        <div className="flex-grow-1">
-                          <div className="fw-semibold">{user.username}</div>
-                        </div>
-                      </div>
-                    </td>
+                {currentUsers.map((user) => (
+                  <tr
+                    key={user._id}
+                    className={user.role === "Pending" ? "table-warning" : ""}
+                  >
+                    <td>{user.username}</td>
                     <td>{user.email}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          user.role === "admin"
-                            ? "bg-primary"
-                            : user.role === "author"
-                            ? "bg-success"
-                            : "bg-secondary"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    <td>
-                      <small className="text-muted">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </small>
-                    </td>
+                    <td>{user.role}</td>
                     <td>
                       <button
-                        className="btn btn-sm btn-outline-danger"
+                        className="btn btn-outline-danger"
                         onClick={() => handleDelete(user._id)}
-                        disabled={user.role === "admin"}
-                        title={
-                          user.role === "admin"
-                            ? "Cannot delete admin users"
-                            : "Delete user"
-                        }
                       >
                         <FaTrash />
                       </button>
+                      {user.role === "Pending" && (
+                        <button
+                          className="btn btn-outline-warning ms-2"
+                          onClick={() => handleRoleUpdate(user._id)}
+                        >
+                          <i className="bi bi-pencil me-1"></i> Update Role
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -338,8 +329,7 @@ const ManageUser = () => {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="mt-4">{renderPagination()}</div>
+          {renderPagination()}
         </>
       )}
     </div>

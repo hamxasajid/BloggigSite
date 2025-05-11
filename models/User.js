@@ -4,28 +4,26 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
-    name: { type: String },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    phone: { type: String, unique: true, sparse: true },
+    phone: { type: String },
     about: { type: String },
     education: { type: String },
+    role: {
+      type: String,
+      enum: ["user", "Pending", "author"],
+      default: "user",
+    },
     profilePicture: { type: String },
-    role: { type: String, enum: ["user", "author", "admin"], default: "user" },
-    lastActive: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
+// Password hash middleware
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-userSchema.methods.matchPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
-
-module.exports = mongoose.model("users", userSchema);
+module.exports = mongoose.model("User", userSchema);

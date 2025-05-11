@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FaCalendarAlt,
@@ -21,6 +21,7 @@ import "./BlogDetails.css";
 
 const BlogDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,14 +45,18 @@ const BlogDetails = () => {
         setLikes(blogRes.data.likes || 0);
 
         if (blogRes.data.allowComments) {
-          const commentsRes = await axios.get(
-            `${url}/api/blogs/${id}/comments`
-          );
+          const commentsRes = await axios.get(`${url}/api/blogs/${id}/comments`);
           setComments(commentsRes.data);
         }
 
         const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || [];
         setHasLiked(likedPosts.includes(id));
+
+        // Check if user is logged in
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
       } catch (err) {
         setError(
           err.response?.data?.message ||
@@ -64,22 +69,34 @@ const BlogDetails = () => {
     };
 
     fetchData();
-
-    const loggedInUser = JSON.parse(localStorage.getItem("user"));
-    setUser(loggedInUser);
   }, [id]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    // Check if user is logged in
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      const response = await axios.post(`${url}/api/blogs/${id}/comments`, {
-        name: user.username,
-        email: user.email,
-        text: newComment,
-        isReply: false,
-      });
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${url}/api/blogs/${id}/comments`,
+        {
+          name: user.username,
+          email: user.email,
+          text: newComment,
+          isReply: false,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setComments([response.data, ...comments]);
       setNewComment("");
       setCurrentPage(1);
@@ -91,13 +108,25 @@ const BlogDetails = () => {
   const handleReplySubmit = async (parentCommentId) => {
     if (!replyContent.trim()) return;
 
+    // Check if user is logged in
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         `${url}/api/blogs/${id}/comments/${parentCommentId}/replies`,
         {
           name: user.username,
           email: user.email,
           text: replyContent,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -121,11 +150,23 @@ const BlogDetails = () => {
   };
 
   const handleLikeComment = async (commentId) => {
+    // Check if user is logged in
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         `${url}/api/blogs/${id}/comments/${commentId}/like`,
         {
-          userId: user._id, // ✅ Send userId here
+          userId: user._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -161,7 +202,14 @@ const BlogDetails = () => {
   };
 
   const handleLikeToggle = async () => {
+    // Check if user is logged in
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("token");
       const newHasLiked = !hasLiked;
       const action = newHasLiked ? "like" : "unlike";
 
@@ -178,9 +226,15 @@ const BlogDetails = () => {
       }
       localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
 
-      await axios.post(`${url}/api/blogs/${id}/like`, {
-        action: action,
-      });
+      await axios.post(
+        `${url}/api/blogs/${id}/like`,
+        { action },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
     } catch {
       setHasLiked(!hasLiked);
       setLikes(hasLiked ? likes - 1 : likes + 1);
@@ -266,7 +320,12 @@ const BlogDetails = () => {
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-lg-9">
-            <div className="back-button-container"></div>
+            <div className="back-button-container">
+              <Link to="/blogs" className="back-button">
+                <FaArrowLeft className="icon" />
+                Back to Blogs
+              </Link>
+            </div>
 
             <article className="blog-card">
               <div className="cover-image-container">
@@ -337,7 +396,7 @@ const BlogDetails = () => {
               </div>
             </article>
 
-            {blog.allowComments && user && (
+            {blog.allowComments && (
               <div className="comments-section">
                 <h3 className="comments-title">
                   <FaComment className="icon" />
@@ -345,39 +404,47 @@ const BlogDetails = () => {
                   {comments.length === 1 ? "Comment" : "Comments"}
                 </h3>
 
-                <form onSubmit={handleCommentSubmit} className="comment-form">
-                  <h4>Leave a Comment</h4>
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      value={user.username}
-                      disabled
-                      placeholder="Your Name*"
-                      required
-                    />
+                {user ? (
+                  <form onSubmit={handleCommentSubmit} className="comment-form">
+                    <h4>Leave a Comment</h4>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        value={user.username}
+                        disabled
+                        placeholder="Your Name*"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <input
+                        type="email"
+                        value={user.email}
+                        disabled
+                        placeholder="Your Email*"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <textarea
+                        placeholder="Write your comment here*"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="submit-button">
+                      <FaPaperPlane className="icon" />
+                      Post Comment
+                    </button>
+                  </form>
+                ) : (
+                  <div className="login-prompt">
+                    <p>
+                      Please <Link to="/login">login</Link> to leave a comment.
+                    </p>
                   </div>
-                  <div className="form-group">
-                    <input
-                      type="email"
-                      value={user.email}
-                      disabled
-                      placeholder="Your Email*"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <textarea
-                      placeholder="Write your comment here*"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button type="submit" className="submit-button">
-                    <FaPaperPlane className="icon" />
-                    Post Comment
-                  </button>
-                </form>
+                )}
 
                 <div className="comments-list">
                   {comments.length === 0 ? (
@@ -405,6 +472,8 @@ const BlogDetails = () => {
                                 isCommentLikedByUser(comment) ? "liked" : ""
                               }`}
                               onClick={() => handleLikeComment(comment._id)}
+                              disabled={!user}
+                              title={!user ? "Login to like" : ""}
                             >
                               {isCommentLikedByUser(comment) ? (
                                 <FaThumbsUp />
@@ -414,29 +483,29 @@ const BlogDetails = () => {
                               <span>{comment.likes || 0}</span>
                             </button>
 
-                            <button
-                              className="reply-button"
-                              onClick={() =>
-                                setReplyingTo(
-                                  replyingTo === comment._id
-                                    ? null
-                                    : comment._id
-                                )
-                              }
-                            >
-                              <FaReply className="icon" />
-                              <span>Reply</span>
-                            </button>
+                            {user && (
+                              <button
+                                className="reply-button"
+                                onClick={() =>
+                                  setReplyingTo(
+                                    replyingTo === comment._id
+                                      ? null
+                                      : comment._id
+                                  )
+                                }
+                              >
+                                <FaReply className="icon" />
+                                <span>Reply</span>
+                              </button>
+                            )}
                           </div>
 
-                          {replyingTo === comment._id && (
+                          {replyingTo === comment._id && user && (
                             <div className="reply-form">
                               <textarea
                                 placeholder="Write your reply here*"
                                 value={replyContent}
-                                onChange={(e) =>
-                                  setReplyContent(e.target.value)
-                                }
+                                onChange={(e) => setReplyContent(e.target.value)}
                                 required
                               />
                               <div className="reply-buttons">
@@ -483,9 +552,9 @@ const BlogDetails = () => {
                                           ? "liked"
                                           : ""
                                       }`}
-                                      onClick={() =>
-                                        handleLikeComment(reply._id)
-                                      }
+                                      onClick={() => handleLikeComment(reply._id)}
+                                      disabled={!user}
+                                      title={!user ? "Login to like" : ""}
                                     >
                                       {isCommentLikedByUser(reply) ? (
                                         <FaThumbsUp />

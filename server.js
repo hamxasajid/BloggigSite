@@ -7,8 +7,9 @@ const User = require("./models/User");
 const Blog = require("./models/blogModel");
 const Comment = require("./models/comments");
 const Contact = require("./models/Contact");
+const auth = require("./middleware/authMiddleware");
+const authUpdate = require("./middleware/auth");
 const authenticateToken = require("./middleware/authenticateToken");
-const asyncHandler = require("express-async-handler");
 
 dotenv.config();
 const app = express();
@@ -222,6 +223,17 @@ app.delete("/api/blogs/:id", async (req, res) => {
   }
 });
 
+app.get("/api/comments", async (req, res) => {
+  try {
+    // Fetch all comments from the Comment model
+    const comments = await Comment.find(); // This retrieves all comments from the database
+    res.status(200).json({ comments }); // Send the comments in the response
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+    res.status(500).json({ message: "Server error while fetching comments." });
+  }
+});
+
 // Comments Routes
 app.get("/api/blogs/:id/comments", async (req, res) => {
   try {
@@ -387,43 +399,79 @@ app.delete("/contact-data/:id", async (req, res) => {
   }
 });
 
-// Add this to your user routes
-app.put(
-  "/profile",
-  asyncHandler(async (req, res) => {
-    const { name, phone, about, education, role, profilePicture } = req.body;
+app.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    res.json({
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      about: user.about,
+      education: user.education,
+      role: user.role,
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user data" });
+  }
+});
 
-    // Find user
-    const user = await User.findById(req.user._id);
+app.put("/profile", authUpdate, async (req, res) => {
+  const allowedUpdates = [
+    "username",
+    "phone",
+    "about",
+    "education",
+    "profilePicture",
+    "role",
+  ];
+
+  // Update all fields including role
+  allowedUpdates.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      req.user[field] = req.body[field];
+    }
+  });
+
+  try {
+    await req.user.save();
+
+    // Return updated user data but don't include sensitive info
+    const userToReturn = req.user.toObject();
+    delete userToReturn.password;
+
+    res.json(userToReturn);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+});
+
+app.put("/users/:id", async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body; // We assume you're sending the updated role in the body
+
+  try {
+    const user = await User.findById(id);
     if (!user) {
-      res.status(404);
-      throw new Error("User not found");
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Update fields
-    user.name = name || user.name;
-    user.phone = phone || user.phone;
-    user.about = about || user.about;
-    user.education = education || user.education;
-    user.role = role || user.role;
-    user.profilePicture = profilePicture || user.profilePicture;
+    // Check if the role is Pending, if so, update it to Author
+    if (user.role === "Pending" && role === "author") {
+      user.role = "author"; // Update the role to author
+      await user.save(); // Save the updated user
 
-    // Save updated user
-    const updatedUser = await user.save();
-
-    res.json({
-      _id: updatedUser._id,
-      username: updatedUser.username,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      phone: updatedUser.phone,
-      about: updatedUser.about,
-      education: updatedUser.education,
-      profilePicture: updatedUser.profilePicture,
-      role: updatedUser.role,
-    });
-  })
-);
+      return res.status(200).json({ message: "Role updated successfully" });
+    } else {
+      return res.status(400).json({ message: "Invalid role update" });
+    }
+  } catch (err) {
+    console.error("Error updating role:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to update role. Please try again." });
+  }
+});
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -13,6 +13,7 @@ const AdminDash = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [newAuthorRequestCount, setNewAuthorRequestCount] = useState(0);
   const navigate = useNavigate();
 
   const url = "https://bloggigsite-production.up.railway.app";
@@ -25,6 +26,7 @@ const AdminDash = () => {
         setAdminData(parsedUser);
         fetchStats();
         fetchNewMessagesCount();
+        fetchNewAuthorRequestCount();
       } else {
         navigate("/login");
       }
@@ -36,13 +38,25 @@ const AdminDash = () => {
 
   const fetchNewMessagesCount = async () => {
     try {
-      const response = await axios.get(`${url}/contact-data`);
+      const response = await axios.get(`${url}/api/contact-data`);
       const newMessages = response.data.filter(
         (msg) => msg.status === "new" || !msg.status
       );
       setNewMessagesCount(newMessages.length);
     } catch (error) {
       console.error("Error fetching messages:", error);
+    }
+  };
+
+  const fetchNewAuthorRequestCount = async () => {
+    try {
+      const response = await axios.get(`${url}/api/users`);
+      const newAuthorRequests = response.data.filter(
+        (user) => user.role === "Pending"
+      );
+      setNewAuthorRequestCount(newAuthorRequests.length);
+    } catch (error) {
+      console.error("Error fetching author requests:", error);
     }
   };
 
@@ -206,6 +220,7 @@ const AdminDash = () => {
           link="/Admindashboard/manageusers"
           color="danger"
           icon={<FaUsers className="me-2" />}
+          badgeCount={newAuthorRequestCount}
         />
 
         <DashboardCard
