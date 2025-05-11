@@ -6,6 +6,17 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // Collapse navbar after clicking a link
+  const handleNavLinkClick = () => {
+    const navbarCollapse = document.getElementById("navbarNav");
+    if (navbarCollapse && navbarCollapse.classList.contains("show")) {
+      const bsCollapse = window.bootstrap.Collapse.getInstance(navbarCollapse);
+      if (bsCollapse) {
+        bsCollapse.hide();
+      }
+    }
+  };
+
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
       logout();
@@ -19,7 +30,7 @@ const Navbar = () => {
       style={{ backgroundColor: "#343a40" }}
     >
       <div className="container-fluid d-flex justify-content-between align-items-center">
-        <Link className="navbar-brand" to="/">
+        <Link className="navbar-brand" to="/" onClick={handleNavLinkClick}>
           <img
             src="/ThePostLogo1.jpg"
             alt="The Post"
@@ -39,17 +50,25 @@ const Navbar = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link className="nav-link" to="/">
+              <Link className="nav-link" to="/" onClick={handleNavLinkClick}>
                 Home
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/blogs">
+              <Link
+                className="nav-link"
+                to="/blogs"
+                onClick={handleNavLinkClick}
+              >
                 Blogs
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/about">
+              <Link
+                className="nav-link"
+                to="/about"
+                onClick={handleNavLinkClick}
+              >
                 About
               </Link>
             </li>
@@ -75,6 +94,7 @@ const Navbar = () => {
                     <Link
                       className="dropdown-item"
                       to={user.role === "admin" ? "/admin" : "/Userdashboard"}
+                      onClick={handleNavLinkClick}
                     >
                       {user.role === "admin"
                         ? "Admin Dashboard"
@@ -90,10 +110,18 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/login" className="btn btn-outline-light me-2">
+                <Link
+                  to="/login"
+                  className="btn btn-outline-light me-2"
+                  onClick={handleNavLinkClick}
+                >
                   Login
                 </Link>
-                <Link to="/signup" className="btn btn-light">
+                <Link
+                  to="/signup"
+                  className="btn btn-light"
+                  onClick={handleNavLinkClick}
+                >
                   Sign Up
                 </Link>
               </>
