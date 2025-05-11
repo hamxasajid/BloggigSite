@@ -27,6 +27,7 @@ import Cookies from "./pages/Cookies";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Message from "./AdminDashboard/Message";
+import CompleteProfile from "./UserDashboard/CompleteProfile";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
         <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/Userdashboard/editblog/:id" element={<EditBlog />} />
         <Route path="/Userdashboard/viewallblogs" element={<ViewAllBlogs />} />
+        <Route path="/userdashboard/complete-profile" element={<CompleteProfile />} />
         <Route path="/admin" element={<AdminDash />} />
         <Route
           path="/Admindashboard/viewallblogs"

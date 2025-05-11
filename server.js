@@ -385,6 +385,45 @@ app.delete("/contact-data/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete message" });
   }
 });
+
+// Add this to your user routes
+app.put(
+  "/profile",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const { name, phone, about, education, role, profilePicture } = req.body;
+
+    // Find user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    // Update fields
+    user.name = name || user.name;
+    user.phone = phone || user.phone;
+    user.about = about || user.about;
+    user.education = education || user.education;
+    user.role = role || user.role;
+    user.profilePicture = profilePicture || user.profilePicture;
+
+    // Save updated user
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      about: updatedUser.about,
+      education: updatedUser.education,
+      profilePicture: updatedUser.profilePicture,
+      role: updatedUser.role,
+    });
+  })
+);
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
