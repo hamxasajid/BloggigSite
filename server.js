@@ -8,6 +8,7 @@ const Blog = require("./models/blogModel");
 const Comment = require("./models/comments");
 const Contact = require("./models/Contact");
 const authenticateToken = require("./middleware/authenticateToken");
+const asyncHandler = require("express-async-handler");
 
 dotenv.config();
 const app = express();
@@ -389,7 +390,6 @@ app.delete("/contact-data/:id", async (req, res) => {
 // Add this to your user routes
 app.put(
   "/profile",
-  authMiddleware,
   asyncHandler(async (req, res) => {
     const { name, phone, about, education, role, profilePicture } = req.body;
 
