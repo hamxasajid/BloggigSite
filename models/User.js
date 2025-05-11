@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     education: { type: String },
     role: {
       type: String,
-      enum: ["user", "Pending", "author"],
+      enum: ["user", "Pending", "author", "admin"],
       default: "user",
     },
     profilePicture: { type: String },

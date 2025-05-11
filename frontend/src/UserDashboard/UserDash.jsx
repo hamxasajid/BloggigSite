@@ -92,7 +92,6 @@ const UserDash = () => {
         const allComments = commentRes.data.comments;
 
         // Log to check comment response
-        console.log("Comments Response:", allComments);
 
         // 3. Filter comments related to the user's blogs
         const userBlogComments = allComments.filter((comment) =>
@@ -100,13 +99,11 @@ const UserDash = () => {
         );
 
         // Log to check filtered comments
-        console.log("User Blog Comments:", userBlogComments);
 
         // 4. Count total comments
         const commentCount = userBlogComments.length;
 
         // Log to check comment count
-        console.log("Comment Count:", commentCount);
 
         // 5. Update state
         setStats((prevStats) => ({
@@ -245,8 +242,8 @@ const UserDash = () => {
                       </span>
                     )}
                     {userData.role === "Pending" && (
-                      <span className="badge bg-warning text-dark ms-2 align-middle">
-                        Pending Approval
+                      <span className="badge bg-warning text-dark ms-2 align-middle fs-6">
+                        Pending
                       </span>
                     )}
                   </h2>

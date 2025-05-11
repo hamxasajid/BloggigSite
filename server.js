@@ -72,7 +72,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // POST login route
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -94,7 +94,6 @@ app.post("/login", async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Login failed", error: err.message });
   }
 });
@@ -167,6 +166,7 @@ app.post("/api/blogs", protect, async (req, res) => {
   }
 });
 
+// READ ALL Blogs with populated username
 app.get("/api/blogs", async (req, res) => {
   try {
     const blogs = await Blog.find()
@@ -174,7 +174,7 @@ app.get("/api/blogs", async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(blogs);
   } catch (error) {
-    console.error("Error fetching blogs:", error); // Log detailed error
+    console.error(error); // Log the error to the console for better debugging
     res
       .status(500)
       .json({ error: "Failed to fetch blogs", details: error.message });

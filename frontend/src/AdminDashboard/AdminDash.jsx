@@ -38,7 +38,7 @@ const AdminDash = () => {
 
   const fetchNewMessagesCount = async () => {
     try {
-      const response = await axios.get(`${url}/api/contact-data`);
+      const response = await axios.get(`${url}/contact-data`);
       const newMessages = response.data.filter(
         (msg) => msg.status === "new" || !msg.status
       );
