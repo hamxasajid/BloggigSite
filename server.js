@@ -72,7 +72,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // POST login route
-app.post("/api/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -94,6 +94,7 @@ app.post("/api/login", async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Login failed", error: err.message });
   }
 });
