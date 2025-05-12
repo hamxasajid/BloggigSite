@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaUserEdit,
   FaBlog,
   FaPlusSquare,
   FaUserCircle,
+  FaUsers,
+  FaHeart,
   FaChartLine,
   FaSpinner,
 } from "react-icons/fa";
 import axios from "axios";
+import { BiLogoKickstarter } from "react-icons/bi";
 
 const UserDash = () => {
   const [userData, setUserData] = useState(null);
@@ -85,11 +88,24 @@ const UserDash = () => {
 
         // 2. Get all comments
         const commentRes = await axios.get(`${url}/api/comments`);
+
         const allComments = commentRes.data.comments;
+
+        // Log to check comment response
+
+        // 3. Filter comments related to the user's blogs
         const userBlogComments = allComments.filter((comment) =>
           userBlogIds.includes(comment.blogId)
         );
+
+        // Log to check filtered comments
+
+        // 4. Count total comments
         const commentCount = userBlogComments.length;
+
+        // Log to check comment count
+
+        // 5. Update state
         setStats((prevStats) => ({
           ...prevStats,
           Comments: commentCount,
@@ -140,9 +156,9 @@ const UserDash = () => {
 
         // Fetch stats (mock data - replace with actual API call)
         setStats({
-          posts: 0,
-          followers: 0,
-          following: 0,
+          posts: 12,
+          followers: 256,
+          following: 34,
         });
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load user data");
