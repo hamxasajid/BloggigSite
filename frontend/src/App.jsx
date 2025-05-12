@@ -48,7 +48,10 @@ function App() {
         <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/Userdashboard/editblog/:id" element={<EditBlog />} />
         <Route path="/Userdashboard/viewallblogs" element={<ViewAllBlogs />} />
-        <Route path="/userdashboard/complete-profile" element={<CompleteProfile />} />
+        <Route
+          path="/userdashboard/complete-profile"
+          element={<CompleteProfile />}
+        />
         <Route path="/admin" element={<AdminDash />} />
         <Route
           path="/Admindashboard/viewallblogs"

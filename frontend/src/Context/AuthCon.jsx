@@ -5,27 +5,29 @@ export const AuthContext = createContext();
 
 const AuthCon = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on initial load
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    const token = localStorage.getItem("token");
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
-  // Login function
   const login = (userData) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
-  // Logout function
   const logout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
   };
+
+  if (loading) return null; // Or a loading spinner
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

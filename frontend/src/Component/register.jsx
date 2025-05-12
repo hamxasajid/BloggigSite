@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
-
-import "./register.css"; // Assuming you have a CSS file for styling
+import "./register.css";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +13,7 @@ const Register = () => {
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
 
   const handleChange = (e) => {
@@ -54,19 +53,23 @@ const Register = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      // ✅ Send welcome email via EmailJS
+      // In your Register component's handleSubmit function
+      const verificationLink = `${url}/api/verify-email?token=${data.verificationToken}`;
       await emailjs.send(
         "service_z3hby28",
         "template_mbeauia",
         {
           username: formData.username,
           email: formData.email,
+          verification_link: verificationLink,
         },
         "ypG_93Enakfn2cUf4"
       );
 
-      // Clear form and navigate
-      setMessage("Registration successful! Redirecting...");
+      // Clear form and show success message
+      setMessage(
+        "Registration successful! Please check your email to verify your account."
+      );
       setFormData({
         username: "",
         email: "",
@@ -74,10 +77,6 @@ const Register = () => {
         confirmPassword: "",
         role: "user",
       });
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
     } catch (err) {
       setMessage(`Error: ${err.message}`);
     } finally {

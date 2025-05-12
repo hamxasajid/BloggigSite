@@ -10,6 +10,7 @@ const Contact = require("./models/Contact");
 const auth = require("./middleware/authMiddleware");
 const authUpdate = require("./middleware/auth");
 const authenticateToken = require("./middleware/authenticateToken");
+const crypto = require("crypto");
 
 dotenv.config();
 const app = express();
@@ -50,24 +51,114 @@ app.get("/", (req, res) => res.send("API Running"));
 
 // Register
 app.post("/api/register", async (req, res) => {
-  const { username, email, password, role } = req.body;
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "Email already registered" });
+    const { username, email, password } = req.body;
 
-    const user = await User.create({ username, email, password, role });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const user = new User({ username, email, password });
+    const verificationToken = user.generateVerificationToken();
+    await user.save();
+
     res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
+      success: true,
+      message: "Registration successful",
+      verificationToken,
     });
   } catch (err) {
     res
       .status(500)
       .json({ message: "Registration failed", error: err.message });
+  }
+});
+
+app.post("/api/resend-verification", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = user.generateVerificationToken();
+    await user.save();
+
+    return res.status(200).json({
+      email: user.email,
+      username: user.username,
+      verificationToken: token,
+    });
+  } catch (err) {
+    console.error("Resend error:", err);
+    res.status(500).json({ message: "Could not resend verification" });
+  }
+});
+
+app.get("/api/verify-email", async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    // Find user who has this token in their history
+    const user = await User.findOne({
+      "verificationHistory.token": token,
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Invalid token" });
+    }
+
+    const tokenEntry = user.verificationHistory.find(
+      (entry) => entry.token === token
+    );
+
+    if (!tokenEntry) {
+      return res.status(400).json({ message: "Token not found" });
+    }
+
+    // ✅ Already verified — just return success
+    if (user.isVerified) {
+      return res.status(200).json({ message: "Email already verified!" });
+    }
+
+    // ⌛ Token expired or already used
+    if (tokenEntry.status === "verified" || tokenEntry.status === "expired") {
+      return res
+        .status(400)
+        .json({ message: "Link has expired or already used" });
+    }
+
+    // ⌛ Token expired
+    if (user.verificationTokenExpires < new Date()) {
+      tokenEntry.usedAt = new Date();
+      tokenEntry.status = "expired";
+      await user.save();
+
+      return res.status(400).json({ message: "Token has expired" });
+    }
+
+    // ✅ Now verify the user
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+
+    tokenEntry.usedAt = new Date();
+    tokenEntry.status = "verified";
+
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully!" });
+  } catch (err) {
+    console.error("Verify error:", err);
+    res.status(500).json({ message: "Server error during verification" });
   }
 });
 
@@ -82,9 +173,14 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Check if user is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
+
     // Update lastActive when the user logs in
     user.lastActive = Date.now();
-    await user.save(); // Save the updated user with the new lastActive time
+    await user.save();
 
     res.json({
       _id: user._id,

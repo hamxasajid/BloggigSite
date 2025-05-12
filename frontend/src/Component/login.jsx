@@ -1,10 +1,11 @@
 import React, { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import emailjs from "@emailjs/browser";
 import { AuthContext } from "../Context/AuthCon";
 import "./login.css";
 
 const Login = () => {
-  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -12,10 +13,75 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const url = "https://bloggigsite-production.up.railway.app";
+  const { login } = useContext(AuthContext);
+  const backendUrl = "https://bloggigsite-production.up.railway.app";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const sendVerificationEmail = async (email, username, token) => {
+    try {
+      const verificationLink = `${backendUrl}/api/verify-email?token=${token}`;
+
+      await emailjs.send(
+        "service_z3hby28",
+        "template_mbeauia",
+        {
+          email,
+          username,
+          verification_link: verificationLink,
+        },
+        "ypG_93Enakfn2cUf4"
+      );
+
+      return true;
+    } catch (err) {
+      console.error("Email sending error:", err);
+      return false;
+    }
+  };
+
+  const handleResendVerification = async (email) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      const emailSent = await sendVerificationEmail(
+        data.email,
+        data.username,
+        data.verificationToken
+      );
+
+      if (!emailSent) {
+        throw new Error("Failed to send verification email");
+      }
+
+      await Swal.fire({
+        title: "Email Sent!",
+        text: "Verification email has been resent. Please check your inbox.",
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#1c45c1",
+      });
+    } catch (err) {
+      await Swal.fire({
+        title: "Error",
+        text: err.message || "Failed to resend verification email",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#1c45c1",
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -24,28 +90,56 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${url}/api/login`, {
+      const response = await fetch(`${backendUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = await response.json();
 
+      if (!response.ok) {
+        if (data.message === "Email not verified") {
+          const { value: resend } = await Swal.fire({
+            title: "Email Not Verified",
+            html: `
+              <p>Please verify your email before logging in.</p>
+              <p>Didn't receive the verification email?</p>
+            `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Resend Verification",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#1c45c1",
+          });
+
+          if (resend) {
+            await handleResendVerification(formData.email);
+          }
+          return;
+        }
+        throw new Error(data.message);
+      }
+
+      // Store token and user data
       localStorage.setItem("token", data.token);
-      login(data);
+      login({
+        username: data.username,
+        email: data.email,
+        role: data.role,
+      });
 
       setMessage("Login successful!");
-      setFormData({ email: "", password: "" });
-
-      if (data.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/Userdashboard");
-      }
+      navigate(data.role === "admin" ? "/admin" : "/userdashboard");
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(err.message || "Login failed");
+      await Swal.fire({
+        title: "Error",
+        text: err.message || "Login failed",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#1c45c1",
+      });
     } finally {
       setLoading(false);
     }
