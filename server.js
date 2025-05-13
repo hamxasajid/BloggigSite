@@ -122,7 +122,13 @@ app.get("/api/verify-email", async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .send(renderHTML(" Token", "The verification link is invalid.", false));
+        .send(
+          renderHTML(
+            "❌ Invalid Token",
+            "The verification link is invalid.",
+            false
+          )
+        );
     }
 
     const tokenEntry = user.verificationHistory.find(
@@ -134,7 +140,7 @@ app.get("/api/verify-email", async (req, res) => {
         .status(400)
         .send(
           renderHTML(
-            "Token Not Found",
+            "❌ Token Not Found",
             "This token was not found in your verification history.",
             false
           )
@@ -144,7 +150,7 @@ app.get("/api/verify-email", async (req, res) => {
     if (user.isVerified) {
       return res.send(
         renderHTML(
-          "Email Already Verified",
+          "✅ Email Already Verified",
           "Your email address has already been verified.",
           true
         )
@@ -154,7 +160,7 @@ app.get("/api/verify-email", async (req, res) => {
     if (tokenEntry.status === "verified" || tokenEntry.status === "expired") {
       return res.send(
         renderHTML(
-          "Link Expired or Used",
+          "⚠️ Link Expired or Used",
           "This link has either expired or was already used.",
           false
         )
@@ -168,7 +174,7 @@ app.get("/api/verify-email", async (req, res) => {
 
       return res.send(
         renderHTML(
-          "Token Expired",
+          "⚠️ Token Expired",
           "The verification link has expired. Please request a new one.",
           false
         )
@@ -188,7 +194,7 @@ app.get("/api/verify-email", async (req, res) => {
     // ✅ Success
     res.send(
       renderHTML(
-        "Email Verified Successfully",
+        "✅ Email Verified Successfully",
         "Thank you for confirming your email address. You can now continue to the login page.",
         true
       )
