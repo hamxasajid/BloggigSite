@@ -205,7 +205,7 @@ const UserDash = () => {
                 </div>
                 <div className="statText">
                   <h3 className="fw-bold mb-0">{stats.posts}</h3>
-                  <h6 className="text-muted fw-normal mb-0">Blog Posts</h6>
+                  <h6 className="text-muted fw-normal mb-0">Blog Post</h6>
                 </div>
               </div>
             </div>
@@ -218,7 +218,7 @@ const UserDash = () => {
                 </div>
                 <div className="statText">
                   <h3 className="fw-bold mb-0">{stats.likes}</h3>
-                  <h6 className="text-muted fw-normal mb-0">Likes</h6>
+                  <h6 className="text-muted fw-normal mb-0">Like</h6>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ const UserDash = () => {
                 </div>
                 <div className="statText">
                   <h3 className="fw-bold mb-0">{stats.comments}</h3>
-                  <h6 className="text-muted fw-normal mb-0 ">Comments</h6>
+                  <h6 className="text-muted fw-normal mb-0 ">Comment</h6>
                 </div>
               </div>
             </div>

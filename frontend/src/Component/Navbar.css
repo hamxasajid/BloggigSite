@@ -51,3 +51,13 @@ navbar {
     gap: 0.75rem !important;
   }
 }
+
+@media (max-width: 576px) {
+  .dropdown-menu {
+    left: 0 !important;
+    right: auto !important;
+    transform: translateX(0) !important;
+    width: 50vw;
+    max-width: none;
+  }
+}

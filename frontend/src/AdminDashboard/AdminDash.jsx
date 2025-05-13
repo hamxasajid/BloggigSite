@@ -201,7 +201,7 @@ const AdminDash = () => {
           <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
             <ActionCard
               title="Manage Blogs"
-              description="View and manage all blog posts"
+              description="Manage all blog posts"
               icon={<FaBlog className="text-primary" />}
               link="/Admindashboard/viewallblogs"
               color="primary"
@@ -210,7 +210,7 @@ const AdminDash = () => {
           <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
             <ActionCard
               title="Manage Users"
-              description="View and manage user accounts"
+              description="Manage user accounts"
               icon={<FaUsers className="text-danger" />}
               link="/Admindashboard/manageusers"
               color="danger"
@@ -220,7 +220,7 @@ const AdminDash = () => {
           <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
             <ActionCard
               title="Messages"
-              description="View and respond to messages"
+              description="Manage messages"
               icon={<FaEnvelope className="text-warning" />}
               link="/Admindashboard/messages"
               color="warning"

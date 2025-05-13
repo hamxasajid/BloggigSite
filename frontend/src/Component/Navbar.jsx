@@ -132,14 +132,17 @@ const Navbar = () => {
                   <span className="d-none d-md-inline">{user.username}</span>
                 </button>
                 <ul
-                  className="dropdown-menu dropdown-menu-end shadow-sm"
+                  className="dropdown-menu dropdown-menu-end shadow-sm mt-2"
                   aria-labelledby="userDropdown"
                 >
                   <li>
                     <Link
                       className="dropdown-item d-flex align-items-center gap-2"
                       to={user.role === "admin" ? "/admin" : "/Userdashboard"}
-                      onClick={handleNavLinkClick}
+                      onClick={() => {
+                        handleNavLinkClick();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
