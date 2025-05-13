@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import emailjs from "@emailjs/browser";
@@ -15,6 +15,28 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const backendUrl = "https://bloggigsite-production.up.railway.app";
+
+  useEffect(() => {
+    // Check if the session has expired on mount
+    checkSessionTimeout();
+
+    // Event listeners to reset last activity time on user interaction
+    const handleUserActivity = () => {
+      localStorage.setItem("lastActivity", new Date().toISOString());
+    };
+
+    // Adding event listeners for user interactions
+    window.addEventListener("click", handleUserActivity);
+    window.addEventListener("keydown", handleUserActivity);
+    window.addEventListener("mousemove", handleUserActivity);
+
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener("click", handleUserActivity);
+      window.removeEventListener("keydown", handleUserActivity);
+      window.removeEventListener("mousemove", handleUserActivity);
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -135,6 +157,7 @@ const Login = () => {
 
       // Store token and user data
       localStorage.setItem("token", data.token);
+      localStorage.setItem("lastActivity", new Date().toISOString()); // Store the current timestamp
       login({
         username: data.username,
         email: data.email,
@@ -155,6 +178,28 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to check if session has timed out
+  const checkSessionTimeout = () => {
+    const lastActivity = localStorage.getItem("lastActivity");
+    const sessionTimeout = 30 * 60 * 1000; // Session timeout in milliseconds (30 minutes)
+    const currentTime = new Date().getTime();
+
+    if (lastActivity) {
+      const lastActivityTime = new Date(lastActivity).getTime();
+      if (currentTime - lastActivityTime > sessionTimeout) {
+        logoutUser();
+      }
+    }
+  };
+
+  // Function to log out the user
+  const logoutUser = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("lastActivity");
+    // You can also navigate the user to the login page
+    window.location.href = "/login";
   };
 
   return (
