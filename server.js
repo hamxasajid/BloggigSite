@@ -104,16 +104,31 @@ app.get("/api/verify-email", async (req, res) => {
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).json({ message: "Token is required" });
+      return res
+        .status(400)
+        .send(
+          renderHTML(
+            "❌ Token Missing",
+            "Token is required to verify your email.",
+            false
+          )
+        );
     }
 
-    // Find user who has this token in their history
     const user = await User.findOne({
       "verificationHistory.token": token,
     });
 
     if (!user) {
-      return res.status(404).json({ message: "Invalid token" });
+      return res
+        .status(404)
+        .send(
+          renderHTML(
+            "❌ Invalid Token",
+            "The verification link is invalid.",
+            false
+          )
+        );
     }
 
     const tokenEntry = user.verificationHistory.find(
@@ -121,31 +136,52 @@ app.get("/api/verify-email", async (req, res) => {
     );
 
     if (!tokenEntry) {
-      return res.status(400).json({ message: "Token not found" });
-    }
-
-    // ✅ Already verified — just return success
-    if (user.isVerified) {
-      return res.status(200).json({ message: "Email already verified!" });
-    }
-
-    // ⌛ Token expired or already used
-    if (tokenEntry.status === "verified" || tokenEntry.status === "expired") {
       return res
         .status(400)
-        .json({ message: "Link has expired or already used" });
+        .send(
+          renderHTML(
+            "❌ Token Not Found",
+            "This token was not found in your verification history.",
+            false
+          )
+        );
     }
 
-    // ⌛ Token expired
+    if (user.isVerified) {
+      return res.send(
+        renderHTML(
+          "✅ Email Already Verified",
+          "Your email address has already been verified.",
+          true
+        )
+      );
+    }
+
+    if (tokenEntry.status === "verified" || tokenEntry.status === "expired") {
+      return res.send(
+        renderHTML(
+          "⚠️ Link Expired or Used",
+          "This link has either expired or was already used.",
+          false
+        )
+      );
+    }
+
     if (user.verificationTokenExpires < new Date()) {
       tokenEntry.usedAt = new Date();
       tokenEntry.status = "expired";
       await user.save();
 
-      return res.status(400).json({ message: "Token has expired" });
+      return res.send(
+        renderHTML(
+          "⚠️ Token Expired",
+          "The verification link has expired. Please request a new one.",
+          false
+        )
+      );
     }
 
-    // ✅ Now verify the user
+    // Mark user as verified
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
@@ -155,12 +191,108 @@ app.get("/api/verify-email", async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ message: "Email verified successfully!" });
+    // ✅ Success
+    res.send(
+      renderHTML(
+        "✅ Email Verified Successfully",
+        "Thank you for confirming your email address. You can now continue to the login page.",
+        true
+      )
+    );
   } catch (err) {
     console.error("Verify error:", err);
-    res.status(500).json({ message: "Server error during verification" });
+    res
+      .status(500)
+      .send(
+        renderHTML(
+          "🚫 Server Error",
+          "Something went wrong during verification. Please try again later.",
+          false
+        )
+      );
   }
 });
+
+// 💡 Reusable HTML rendering function
+function renderHTML(title, message, showLoginButton) {
+  return `
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>${title}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+          }
+          .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            transition: all 0.3s ease;
+          }
+          .card h1 {
+            color: #1C45C1;
+            margin-bottom: 20px;
+            font-size: 26px;
+          }
+          .card p {
+            font-size: 16px;
+            margin-bottom: 30px;
+          }
+          .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #1C45C1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s ease;
+          }
+          .btn:hover {
+            background: #1639a3;
+          }
+          .icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">${
+            title.includes("✅") ? "✅" : title.includes("⚠️") ? "⚠️" : "❌"
+          }</div>
+          <h1>${title}</h1>
+          <p>${message}</p>
+          ${
+            showLoginButton
+              ? '<a href="/login" class="btn">Continue to Login</a>'
+              : ""
+          }
+        </div>
+      </body>
+    </html>
+  `;
+}
 
 // POST login route
 app.post("/api/login", async (req, res) => {
@@ -169,19 +301,27 @@ app.post("/api/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
 
-    if (!user || !(await user.matchPassword(password))) {
+    // 🧍‍♂️ Check if user with email exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔐 Check if password is correct
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if user is verified
+    // 📧 Check if email is verified
     if (!user.isVerified) {
       return res.status(403).json({ message: "Email not verified" });
     }
 
-    // Update lastActive when the user logs in
+    // ⏰ Update last active
     user.lastActive = Date.now();
     await user.save();
 
+    // ✅ Successful login
     res.json({
       _id: user._id,
       username: user.username,
@@ -574,4 +714,3 @@ app.put("/users/:id", async (req, res) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-

@@ -1,0 +1,28 @@
+.no-focus-outline:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .statWrap {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  .statWrap > div {
+    width: 100%;
+  }
+  .icon {
+    font-size: 0.8rem;
+  }
+  .icon-bg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+  }
+
+  .statText h6 {
+    font-size: 0.8rem;
+  }
+}

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import moment from "moment";
+import "./pages.css";
 import {
   FaSearch,
   FaThumbsUp,
@@ -130,7 +131,7 @@ const Blogs = () => {
                       </span>
                       <input
                         type="text"
-                        className="form-control border-start-0"
+                        className="form-control border-start-1 no-focus-outline"
                         placeholder="Search by title, content, or tags..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -143,7 +144,7 @@ const Blogs = () => {
                         <FaFilter className="text-muted" />
                       </span>
                       <select
-                        className="form-select"
+                        className="form-select no-focus-outline"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                       >
@@ -173,16 +174,18 @@ const Blogs = () => {
               <div className="col-md-4 mb-4" key={post._id}>
                 <div className="card h-100 shadow-sm border-0 hover-effect">
                   <div className="position-relative">
-                    <img
-                      src={post.coverImage}
-                      className="card-img-top"
-                      alt={post.title}
-                      style={{
-                        objectFit: "cover",
-                        borderTopLeftRadius: "calc(0.25rem - 1px)",
-                        borderTopRightRadius: "calc(0.25rem - 1px)",
-                      }}
-                    />
+                    <Link to={`/blog/${post._id}`} onClick={scrollToTop}>
+                      <img
+                        src={post.coverImage}
+                        className="card-img-top"
+                        alt={post.title}
+                        style={{
+                          objectFit: "cover",
+                          borderTopLeftRadius: "calc(0.25rem - 1px)",
+                          borderTopRightRadius: "calc(0.25rem - 1px)",
+                        }}
+                      />
+                    </Link>
                     <div className="position-absolute top-0 end-0 m-2">
                       <span className="badge bg-dark bg-opacity-75">
                         {post.category}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./UserDash.css";
 import {
   FaEdit,
   FaTrash,
@@ -106,7 +107,7 @@ const ViewAllBlogs = () => {
             </span>
             <input
               type="text"
-              className="form-control"
+              className="form-control no-focus-outline"
               placeholder="Search blogs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -115,7 +116,7 @@ const ViewAllBlogs = () => {
         </div>
         <div className="col-md-4">
           <select
-            className="form-select"
+            className="form-select no-focus-outline"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >

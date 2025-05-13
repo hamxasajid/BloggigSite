@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import moment from "moment";
-import "./Homepage.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const Home = () => {
   const [latestPosts, setLatestPosts] = useState([]);
@@ -41,38 +41,36 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Hero Section */}
-      <section className="hero-section bg-primary text-white py-5 min-vh-100">
-        <div className="container py-5">
-          <div className="row justify-content-center py-lg-5">
-            <div className="col-lg-8 text-center gap-4">
-              <h1 className="display-4 fw-bold mb-4">The Post</h1>
-              <p className="lead mb-4">
-                A Platform for Curious Minds, Where Ideas Unfold
-              </p>
-              <Link to="/blogs" className="btn btn-light btn-lg px-4 me-2 mb-2">
-                Explore All Posts
-              </Link>
-              <Link
-                to="/Userdashboard/createblog"
-                className="btn btn-outline-light btn-lg px-4 mb-2"
-              >
-                Write a Post
-              </Link>
-            </div>
+      <section className="bg-primary text-white py-5 d-flex align-items-center">
+        <div className="container text-center">
+          <h1 className="display-4 fw-bold mb-3">The Post</h1>
+          <p className="lead mb-4">
+            A Platform for Curious Minds, Where Ideas Unfold
+          </p>
+          <div className="d-flex justify-content-center gap-3 flex-wrap">
+            <Link to="/blogs" className="btn btn-light btn-lg px-4">
+              Explore All Posts
+            </Link>
+            <Link
+              to="/Userdashboard/createblog"
+              className="btn btn-outline-light btn-lg px-4"
+            >
+              Write a Post
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Latest Posts Section */}
-      <section className="latest-posts py-5 bg-light" id="posts">
-        <div className="container py-4">
-          <div className="section-header text-center mb-5">
-            <h2 className="display-5 fw-bold">Latest Articles</h2>
+      <section className="bg-light py-5">
+        <div className="container">
+          <div className="text-center mb-5">
+            <h2 className="fw-bold display-6">Latest Articles</h2>
             <p className="text-muted">Discover our most recent publications</p>
           </div>
 
           {loading && (
-            <div className="text-center py-5 min-vh-100">
+            <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
@@ -87,37 +85,31 @@ const Home = () => {
 
           <div className="row g-4">
             {latestPosts.map((post) => (
-              <div className="col-lg-4 col-md-6" key={post._id}>
-                <div className="card h-100 border-0 shadow-sm overflow-hidden">
-                  <div
-                    className="card-img-top overflow-hidden"
-                    style={{ height: "250px" }}
-                  >
+              <div className="col-lg-4 col-md-6 col-sm-12" key={post._id}>
+                <div className="card h-100 shadow-sm border-0">
+                  <Link to={`/blog/${post._id}`} onClick={scrollToTop}>
                     <img
                       src={
                         post.coverImage ||
                         "https://via.placeholder.com/800x450?text=Blog+Image"
                       }
-                      className="img-fluid w-100 object-fit-contain"
+                      className="card-img-top"
                       alt={post.title}
+                      style={{ height: "220px", objectFit: "cover" }}
                     />
-                  </div>
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <small className="text-muted">
-                        By {post.user?.username || "Unknown Author"}
-                      </small>
-                      <small className="text-muted">
-                        {moment(post.createdAt).fromNow()}
-                      </small>
+                  </Link>
+                  <div className="card-body d-flex flex-column">
+                    <div className="d-flex justify-content-between text-muted small mb-2">
+                      <span>By {post.user?.username || "Unknown"}</span>
+                      <span>{moment(post.createdAt).fromNow()}</span>
                     </div>
-                    <h3 className="h5 card-title mb-3">{post.title}</h3>
+                    <h5 className="card-title fw-bold mb-2">{post.title}</h5>
                     <p className="card-text text-muted mb-4">
                       {truncateContent(post.content, 120)}
                     </p>
                     <Link
                       to={`/blog/${post._id}`}
-                      className="btn btn-outline-primary w-100"
+                      className="btn btn-outline-primary mt-auto"
                       onClick={scrollToTop}
                     >
                       Read More
@@ -142,24 +134,20 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="cta-section py-5 bg-white">
-        <div className="container py-4">
-          <div className="row justify-content-center">
-            <div className="col-lg-8 text-center">
-              <h2 className="h3 mb-4">Ready to share your thoughts?</h2>
-              <p className="lead text-muted mb-4">
-                Join our community of writers and readers today.
-              </p>
-              <Link
-                to="/signup"
-                className="btn btn-primary btn-lg px-4"
-                onClick={scrollToTop}
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
+      {/* Call to Action Section */}
+      <section className="py-5 bg-white">
+        <div className="container text-center">
+          <h2 className="h3 mb-4">Ready to share your thoughts?</h2>
+          <p className="lead text-muted mb-4">
+            Join our community of writers and readers today.
+          </p>
+          <Link
+            to="/signup"
+            className="btn btn-primary btn-lg px-4"
+            onClick={scrollToTop}
+          >
+            Get Started
+          </Link>
         </div>
       </section>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./AdminDashboard.css";
 import {
   FaSearch,
   FaFilter,
@@ -210,7 +211,7 @@ const ManageAllBlogs = () => {
                     </span>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control no-focus-outline"
                       placeholder="Search blogs by title, content, or tags..."
                       value={searchTerm}
                       onChange={(e) => {
@@ -226,7 +227,7 @@ const ManageAllBlogs = () => {
                       <FaFilter />
                     </span>
                     <select
-                      className="form-select"
+                      className="form-select no-focus-outline"
                       value={statusFilter}
                       onChange={(e) => {
                         setStatusFilter(e.target.value);
@@ -245,7 +246,7 @@ const ManageAllBlogs = () => {
                       <FaUser />
                     </span>
                     <select
-                      className="form-select"
+                      className="form-select no-focus-outline"
                       value={authorFilter}
                       onChange={(e) => {
                         setAuthorFilter(e.target.value);
@@ -395,7 +396,7 @@ const ManageAllBlogs = () => {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4">{renderPagination()}</div>
+          <div className="mt-4 ">{renderPagination()}</div>
         </>
       )}
     </div>

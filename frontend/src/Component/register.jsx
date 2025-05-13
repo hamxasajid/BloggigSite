@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import emailjs from "@emailjs/browser";
+import axios from "axios";
 import "./register.css";
 
 const Register = () => {
@@ -13,7 +14,7 @@ const Register = () => {
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  // const navigate = useNavigate();
+
   const url = "https://bloggigsite-production.up.railway.app";
 
   const handleChange = (e) => {
@@ -25,51 +26,108 @@ const Register = () => {
     setMessage("");
     setLoading(true);
 
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    const { username, email, password, confirmPassword, role } = formData;
+
+    // Basic validations
+    if (!/\S+@\S+\.\S+/.test(email)) {
       setMessage("Please enter a valid email address.");
       setLoading(false);
       return;
     }
 
-    if (formData.password.length < 8) {
-      setMessage("Password must be at least 8 characters.");
+    if (password.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
       setLoading(false);
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       setMessage("Passwords do not match.");
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(`${url}/api/register`, {
+      let responseMailboxLayer;
+      let responseAbstract;
+
+      // Try MailboxLayer API first
+      try {
+        const apiKeyMailboxLayer = "4aa8f4faef998a46752ed3da9586297d";
+        responseMailboxLayer = await axios.get(
+          `http://apilayer.net/api/check?access_key=${apiKeyMailboxLayer}&email=${email}`
+        );
+      } catch {
+        console.error("MailboxLayer API failed, trying Abstract API...");
+        // If MailboxLayer fails, use Abstract API
+        const apiKeyAbstract = "653addd6f05740c49a2e19436ad0c659";
+        responseAbstract = await axios.get(
+          `https://emailreputation.abstractapi.com/v1/?api_key=${apiKeyAbstract}&email=${email}`
+        );
+      }
+
+      // Check for response from MailboxLayer if it was successful
+      if (responseMailboxLayer) {
+        const dataMailboxLayer = responseMailboxLayer.data;
+        if (
+          !dataMailboxLayer.smtp_check ||
+          dataMailboxLayer.disposable ||
+          dataMailboxLayer.score < 0.5
+        ) {
+          setMessage(
+            "Please provide a valid, non-temporary email address to proceed with the registration."
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Check for response from Abstract API if it was used
+      if (responseAbstract) {
+        const dataAbstract = responseAbstract.data;
+        if (
+          dataAbstract.email_deliverability.status !== "deliverable" ||
+          dataAbstract.email_quality.is_disposable ||
+          dataAbstract.email_quality.score < 0.7
+        ) {
+          setMessage(
+            "Please provide a valid, non-temporary email address to proceed with the registration."
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Proceed with registration if email is valid
+      const registrationResponse = await fetch(`${url}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ username, email, password, role }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const registrationData = await registrationResponse.json();
 
-      // In your Register component's handleSubmit function
-      const verificationLink = `${url}/api/verify-email?token=${data.verificationToken}`;
+      if (!registrationResponse.ok)
+        throw new Error(registrationData.message || "Registration failed");
+
+      // Send verification email
+      const verificationLink = `${url}/api/verify-email?token=${registrationData.verificationToken}`;
       await emailjs.send(
         "service_z3hby28",
         "template_mbeauia",
         {
-          username: formData.username,
-          email: formData.email,
+          username,
+          email,
           verification_link: verificationLink,
         },
-        "ypG_93Enakfn2cUf4"
+        "ypG_93Enakfn2cUf4" // Replace with your public key
       );
 
-      // Clear form and show success message
       setMessage(
         "Registration successful! Please check your email to verify your account."
       );
+
+      // Reset form data
       setFormData({
         username: "",
         email: "",
@@ -77,8 +135,8 @@ const Register = () => {
         confirmPassword: "",
         role: "user",
       });
-    } catch (err) {
-      setMessage(`Error: ${err.message}`);
+    } catch (error) {
+      setMessage(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -99,10 +157,10 @@ const Register = () => {
           {message && (
             <div
               className={`alert ${
-                message.includes("successful")
+                message.toLowerCase().includes("success")
                   ? "alert-success"
                   : "alert-danger"
-              } mb-4`}
+              }`}
             >
               {message}
             </div>
@@ -115,9 +173,9 @@ const Register = () => {
               </label>
               <input
                 type="text"
-                className="form-control py-2"
                 id="username"
                 name="username"
+                className="form-control py-2"
                 value={formData.username}
                 onChange={handleChange}
                 required
@@ -131,9 +189,9 @@ const Register = () => {
               </label>
               <input
                 type="email"
-                className="form-control py-2"
                 id="email"
                 name="email"
+                className="form-control py-2"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -147,9 +205,9 @@ const Register = () => {
               </label>
               <input
                 type="password"
-                className="form-control py-2"
                 id="password"
                 name="password"
+                className="form-control py-2"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -164,9 +222,9 @@ const Register = () => {
               </label>
               <input
                 type="password"
-                className="form-control py-2"
                 id="confirmPassword"
                 name="confirmPassword"
+                className="form-control py-2"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
@@ -184,8 +242,7 @@ const Register = () => {
                   <span
                     className="spinner-border spinner-border-sm me-2"
                     role="status"
-                    aria-hidden="true"
-                  ></span>
+                  />
                   Registering...
                 </>
               ) : (

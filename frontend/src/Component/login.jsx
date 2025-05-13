@@ -99,13 +99,24 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.message === "User not found") {
+          await Swal.fire({
+            title: "User Not Found",
+            text: "No account found with this email. Please sign up first.",
+            icon: "warning",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#1c45c1",
+          });
+          return;
+        }
+
         if (data.message === "Email not verified") {
           const { value: resend } = await Swal.fire({
             title: "Email Not Verified",
             html: `
-              <p>Please verify your email before logging in.</p>
-              <p>Didn't receive the verification email?</p>
-            `,
+            <p>Please verify your email before logging in.</p>
+            <p>Didn't receive the verification email?</p>
+          `,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Resend Verification",
@@ -118,6 +129,7 @@ const Login = () => {
           }
           return;
         }
+
         throw new Error(data.message);
       }
 

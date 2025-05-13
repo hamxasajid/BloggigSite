@@ -1,7 +1,18 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUsers, FaBlog, FaUserClock, FaEnvelope } from "react-icons/fa";
+import "./AdminDashboard.css";
+import {
+  FaUsers,
+  FaBlog,
+  FaUserClock,
+  FaEnvelope,
+  FaSpinner,
+  FaUserShield,
+  FaChartLine,
+  FaEdit,
+} from "react-icons/fa";
+import { BsGraphUp } from "react-icons/bs";
 
 const AdminDash = () => {
   const [adminData, setAdminData] = useState(null);
@@ -10,6 +21,8 @@ const AdminDash = () => {
     totalUsers: 0,
     activeUsers: 0,
     totalBlogs: 0,
+    regesterUsersLastSevenDays: 0,
+    publishBlogsLastSevenDays: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
@@ -68,7 +81,7 @@ const AdminDash = () => {
           userId: user._id,
         });
       }
-    }, 5 * 60 * 1000); // Update every 5 minutes
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -95,7 +108,6 @@ const AdminDash = () => {
         return createdAt >= sevenDaysAgo;
       }).length;
 
-      // Find users active in the last 10 minutes
       const twoMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
       const activeUsersRes = await axios.get(`${url}/active-users`, {
         params: { lastActive: twoMinutesAgo.toISOString() },
@@ -111,11 +123,6 @@ const AdminDash = () => {
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
-      setStats({
-        totalUsers: 0,
-        activeUsers: 0,
-        totalBlogs: 0,
-      });
     } finally {
       setStatsLoading(false);
     }
@@ -123,166 +130,218 @@ const AdminDash = () => {
 
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+        <div className="text-center">
+          <FaSpinner className="fa-spin me-2 fs-3 text-primary" />
+          <p className="mt-3 text-muted">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-5 min-vh-100">
-      <div className="mb-4 text-center">
-        <h2 className="fw-bold">Admin Dashboard</h2>
-        <p className="text-muted">Welcome back, {adminData?.username}</p>
-      </div>
-
-      {/* Profile Card */}
-      <div className="card mb-4 shadow-sm border-0">
-        <div className="card-body d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center">
-            <div
-              style={{
-                width: "50px",
-                height: "50px",
-                borderRadius: "50%",
-                backgroundColor: "#1C45C1",
-                color: "#fff",
-                fontSize: "20px",
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: "15px",
-              }}
-            >
-              {adminData?.username?.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h5 className="mb-0">{adminData?.username}</h5>
-              {adminData?.email && (
-                <small className="text-muted d-block">{adminData.email}</small>
-              )}
+    <div className="bg-light min-vh-100">
+      <div className="container py-3 py-md-4">
+        {/* Header Section */}
+        <div className="row mb-3 mb-md-4">
+          <div className="col-12">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3 gap-3">
+              <div className="text-center text-md-start">
+                <h2 className="fw-bold mb-1 d-flex align-items-center justify-content-center justify-content-md-start">
+                  <FaUserShield className="me-2 text-primary" />
+                  Admin Dashboard
+                </h2>
+                <p className="text-muted mb-0">
+                  Welcome back,{" "}
+                  <span className="fw-medium">{adminData?.username}</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Statistics Section */}
-      <div className="row mb-4 g-4">
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
-          loading={statsLoading}
-          color={stats.totalUsers > 0 ? "success" : "danger"}
-          icon={<FaUsers size={24} />}
-          helpText={
-            stats.regesterUsersLastSevenDays > 0
-              ? "+" + stats.regesterUsersLastSevenDays + " Users in last 7 days"
-              : "No new users in last 7 days"
-          }
-        />
-        <StatCard
-          title="Active Users"
-          value={stats.activeUsers}
-          loading={statsLoading}
-          color={stats.activeUsers > 0 ? "success" : "danger"}
-          icon={<FaUserClock size={24} />}
-          helpText="Active in last 10 minutes"
-        />
-        <StatCard
-          title="Total Blogs"
-          value={stats.totalBlogs}
-          loading={statsLoading}
-          color={stats.totalBlogs > 0 ? "success" : "danger"}
-          icon={<FaBlog size={24} />}
-          helpText={
-            stats.publishBlogsLastSevenDays > 0
-              ? "+" + stats.publishBlogsLastSevenDays + " Blogs in last 7 days"
-              : "No new blogs in last 7 days"
-          }
-        />
-      </div>
+        {/* Statistics Section */}
+        <div className="row g-2 g-md-3 mb-3 mb-md-4">
+          <StatCard
+            title="Total Users"
+            value={stats.totalUsers}
+            loading={statsLoading}
+            trend={stats.regesterUsersLastSevenDays}
+            trendLabel="last 7 days"
+            icon={<FaUsers className="text-primary" />}
+            color="primary"
+          />
+          <StatCard
+            title="Active Users"
+            value={stats.activeUsers}
+            loading={statsLoading}
+            trendLabel="last 10 mins"
+            icon={<FaUserClock className="text-success" />}
+            color="success"
+          />
+          <StatCard
+            title="Total Blogs"
+            value={stats.totalBlogs}
+            loading={statsLoading}
+            trend={stats.publishBlogsLastSevenDays}
+            trendLabel="last 7 days"
+            icon={<FaBlog className="text-info" />}
+            color="info"
+          />
+        </div>
 
-      {/* Dashboard Panels */}
-      <div className="row g-4">
-        <DashboardCard
-          title="Manage All Blogs"
-          desc="View, edit, and delete users' blog posts."
-          link="/Admindashboard/viewallblogs"
-          color="primary"
-          icon={<FaBlog className="me-2" />}
-        />
-        <DashboardCard
-          title="Manage Users"
-          desc="Control access and update user info."
-          link="/Admindashboard/manageusers"
-          color="danger"
-          icon={<FaUsers className="me-2" />}
-          badgeCount={newAuthorRequestCount}
-        />
+        {/* Quick Actions Section */}
+        <div className="row mb-3 mb-md-4">
+          <div className="col-12">
+            <h5 className="fw-bold mb-3 d-flex align-items-center">
+              <BsGraphUp className="me-2 text-secondary" />
+              Quick Actions
+            </h5>
+          </div>
+          <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
+            <ActionCard
+              title="Manage Blogs"
+              description="View and manage all blog posts"
+              icon={<FaBlog className="text-primary" />}
+              link="/Admindashboard/viewallblogs"
+              color="primary"
+            />
+          </div>
+          <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
+            <ActionCard
+              title="Manage Users"
+              description="View and manage user accounts"
+              icon={<FaUsers className="text-danger" />}
+              link="/Admindashboard/manageusers"
+              color="danger"
+              badge={newAuthorRequestCount}
+            />
+          </div>
+          <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
+            <ActionCard
+              title="Messages"
+              description="View and respond to messages"
+              icon={<FaEnvelope className="text-warning" />}
+              link="/Admindashboard/messages"
+              color="warning"
+              badge={newMessagesCount}
+            />
+          </div>
+          <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
+            <ActionCard
+              title="Analytics"
+              description="View site analytics"
+              icon={<FaChartLine className="text-success" />}
+              link="/Admindashboard/analytics"
+              color="success"
+            />
+          </div>
+        </div>
 
-        <DashboardCard
-          title="Messages"
-          desc="View and respond to user messages."
-          link="/Admindashboard/messages"
-          color="warning"
-          icon={<FaEnvelope className="me-2" />}
-          badgeCount={newMessagesCount}
-        />
+        {/* Recent Activity Section */}
+        <div className="row">
+          <div className="col-12">
+            <div className="card shadow-sm border-0">
+              <div className="card-body">
+                <h5 className="card-title fw-bold d-flex align-items-center">
+                  <FaEdit className="me-2 text-secondary" />
+                  Recent Activity
+                </h5>
+                <div className="alert alert-info border-0 bg-opacity-10 mb-0">
+                  <div className="d-flex align-items-center">
+                    <FaChartLine className="me-2 me-md-3 text-info" size={20} />
+                    <div>
+                      <p className="mb-0 small">
+                        Activity dashboard coming soon! Track recent admin
+                        actions and system events.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, loading, color, icon, helpText }) => (
-  <div className="col-md-4">
-    <div className="card border-0 shadow-sm h-100">
-      <div className="card-body text-center">
-        <div className={`text-${color} mb-2`}>{icon}</div>
-        <h5 className="card-title text-muted">{title}</h5>
-        {loading ? (
-          <div
-            className={`spinner-border spinner-border-sm text-${color}`}
-            role="status"
-          >
-            <span className="visually-hidden">Loading...</span>
+const StatCard = ({
+  title,
+  value,
+  loading,
+  trend,
+  trendLabel,
+  icon,
+  color,
+}) => {
+  return (
+    <div className="col-12 col-md-4">
+      <div
+        className={`card border-0 shadow-sm border-start border-3 border-${color} h-100`}
+      >
+        <div className="card-body p-3">
+          <div className="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 className="text-muted mb-2 small">{title}</h6>
+              {loading ? (
+                <div
+                  className="d-flex align-items-center"
+                  style={{ height: "38px" }}
+                >
+                  <FaSpinner className="fa-spin text-muted" />
+                </div>
+              ) : (
+                <h3 className="mb-0 fw-bold">{value}</h3>
+              )}
+            </div>
+            <div className={`icon-circle bg-${color}-light text-${color}`}>
+              {icon}
+            </div>
           </div>
-        ) : (
-          <h2 className={`fw-bold text-${color}`}>{value}</h2>
-        )}
-        <small className={`text-${value > 0 ? "muted" : "danger"}`}>
-          {helpText}
-        </small>
+          {trend !== undefined && (
+            <div className="mt-2">
+              <small
+                className={`text-${trend > 0 ? "success" : "muted"} fw-medium`}
+              >
+                {trend > 0 ? `+${trend}` : "No new"} {trendLabel}
+              </small>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const DashboardCard = ({ title, desc, link, color, icon, badgeCount }) => (
-  <div className="col-md-6 col-lg-4">
-    <div className="card h-100 border-0 shadow-sm position-relative">
-      {badgeCount > 0 && (
-        <span
-          className="position-absolute top-0 end-0 badge rounded-pill bg-danger"
-          style={{ transform: "translate(-50%, 50%)" }}
+const ActionCard = ({ title, description, icon, link, color, badge }) => {
+  return (
+    <div
+      className={`card border-0 shadow-sm hover-lift hover-shadow transition-all h-100`}
+    >
+      <div className="card-body text-center p-3">
+        {badge > 0 && (
+          <span
+            className={`position-absolute top-20 end-0 translate-middle badge rounded-pill bg-${color}`}
+            style={{ transform: "translate(30%, -30%)" }}
+          >
+            {badge}
+          </span>
+        )}
+        <div
+          className={`icon-circle-lg bg-${color}-light text-${color} mb-2 mx-auto`}
         >
-          {badgeCount}
-        </span>
-      )}
-      <div className="card-body">
-        <h5 className="card-title">
           {icon}
-          {title}
-        </h5>
-        <p className="card-text">{desc}</p>
-        <a href={link} className={`btn btn-${color} w-100`}>
+        </div>
+        <h5 className="h6 mb-1">{title}</h5>
+        <p className="text-muted small mb-2 h-25">{description}</p>
+        <a href={link} className={`btn btn-sm btn-${color} stretched-link`}>
           Go to {title}
         </a>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default AdminDash;
