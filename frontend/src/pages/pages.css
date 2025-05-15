@@ -2,3 +2,154 @@
   outline: none;
   box-shadow: none;
 }
+
+/* Blog Page Styles */
+.blog-page {
+  background-color: #f8f9fa;
+}
+
+.blog-hero {
+  background: linear-gradient(135deg, #0d6efd, #6f42c1);
+  position: relative;
+  overflow: hidden;
+}
+
+.blog-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")
+    center/cover;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.blog-content {
+  background-color: #fff;
+}
+
+.blog-card {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.blog-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-container {
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+}
+
+.card-img-link {
+  display: block;
+  height: 100%;
+}
+
+.blog-card img {
+  aspect-ratio: 16/9;
+  height: auto;
+  flex-shrink: 0;
+  transition: transform 0.5s ease;
+}
+
+.blog-card:hover .card-img-link img {
+  transform: scale(1.05);
+}
+
+.card-img-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.search-bar .form-control,
+.filter-select .form-select {
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}
+
+.search-bar .input-group-text,
+.filter-select .input-group-text {
+  padding: 0.75rem;
+}
+
+.blog-pagination .page-item.active .page-link {
+  color: #e9ecef;
+  background-color: #0d6efd;
+  outline: none;
+  box-shadow: none;
+}
+
+.blog-pagination .page-link {
+  color: #0d6efd;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.blog-pagination .page-link:hover {
+  background-color: #e9ecef;
+}
+
+.btn-link {
+  transition: all 0.3s ease;
+}
+
+.btn-link:hover {
+  text-decoration: none;
+}
+
+.btn-link:hover .fa-arrow-right {
+  transform: translateX(3px);
+}
+
+.fa-arrow-right {
+  transition: transform 0.3s ease;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .blog-hero {
+    padding: 3rem 0;
+  }
+
+  .blog-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .card-img-container {
+    height: 150px;
+  }
+}
+
+@media (max-width: 576px) {
+  .blog-hero {
+    padding: 2rem 0;
+  }
+
+  .blog-hero h1 {
+    font-size: 2rem;
+  }
+
+  .blog-hero p {
+    font-size: 1rem;
+  }
+
+  .blog-pagination .page-link {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+.topBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

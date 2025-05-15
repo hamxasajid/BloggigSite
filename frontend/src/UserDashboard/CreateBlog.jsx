@@ -32,11 +32,17 @@ const CreateBlog = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      // Removed unused setUserData call
-    } else {
+
+    if (!storedUser) {
       navigate("/login");
+    } else {
+      const user = JSON.parse(storedUser);
+      if (user.role !== "author") {
+        navigate("/");
+      }
+      // else: user exists and is author, stay on the page
     }
+
     setLoading(false);
   }, [navigate]);
 

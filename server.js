@@ -6,11 +6,11 @@ const connectDB = require("./config/db");
 const User = require("./models/User");
 const Blog = require("./models/blogModel");
 const Comment = require("./models/comments");
+const Like = require("./models/Like");
 const Contact = require("./models/Contact");
 const auth = require("./middleware/authMiddleware");
 const authUpdate = require("./middleware/auth");
-const authenticateToken = require("./middleware/authenticateToken");
-const crypto = require("crypto");
+const authenticate = require("./middleware/authenticate");
 
 dotenv.config();
 const app = express();
@@ -294,19 +294,18 @@ function renderHTML(title, message, showLoginButton) {
   `;
 }
 
-// POST login route
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
 
-    // 🧍‍♂️ Check if user with email exists
+    // 🧍‍♂️ Check if user exists
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🔐 Check if password is correct
+    // 🔐 Check if password matches
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -317,17 +316,25 @@ app.post("/api/login", async (req, res) => {
       return res.status(403).json({ message: "Email not verified" });
     }
 
-    // ⏰ Update last active
+    // ⏰ Update last active timestamp
     user.lastActive = Date.now();
+
+    // ✅ Generate the JWT token here before pushing to the database
+    const token = generateToken(user._id); // Ensure this generates the token
+
+    // Push the generated token into the user's tokens array
+    user.tokens.push({ token });
+
+    // Save the user with the new token
     await user.save();
 
-    // ✅ Successful login
+    // ✅ Respond with user data and token
     res.json({
       _id: user._id,
       username: user.username,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
+      token, // Send the generated token back
     });
   } catch (err) {
     res.status(500).json({ message: "Login failed", error: err.message });
@@ -432,7 +439,10 @@ app.get("/api/user/blogs", protect, async (req, res) => {
 // READ ONE Blog by ID
 app.get("/api/blogs/:id", async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate(
+      "user",
+      "username isVerified role profilePicture"
+    );
     if (!blog) return res.status(404).send("Blog not found");
     res.json(blog);
   } catch (err) {
@@ -473,7 +483,7 @@ app.get("/api/comments", async (req, res) => {
   }
 });
 
-// Comments Routes
+// Get all comments for a blog post
 app.get("/api/blogs/:id/comments", async (req, res) => {
   try {
     const comments = await Comment.find({
@@ -482,8 +492,16 @@ app.get("/api/blogs/:id/comments", async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .populate({
+        path: "userId", // populate user who posted the comment
+        select: "username profilePicture", // select only necessary fields
+      })
+      .populate({
         path: "replies",
         options: { sort: { createdAt: -1 } },
+        populate: {
+          path: "userId", // populate user who posted the reply
+          select: "username profilePicture", // only needed fields
+        },
       });
 
     res.json(comments);
@@ -492,10 +510,12 @@ app.get("/api/blogs/:id/comments", async (req, res) => {
   }
 });
 
-app.post("/api/blogs/:id/comments", async (req, res) => {
+// Create a new comment
+app.post("/api/blogs/:id/comments", authenticate, async (req, res) => {
   try {
     const comment = new Comment({
       blogId: req.params.id,
+      userId: req.user._id, // 👈 Add userId here
       name: req.body.name,
       email: req.body.email,
       text: req.body.text,
@@ -504,6 +524,7 @@ app.post("/api/blogs/:id/comments", async (req, res) => {
     });
 
     await comment.save();
+    await comment.populate("userId", "username profilePicture");
     res.status(201).json(comment);
   } catch (err) {
     res.status(500).send(err.message);
@@ -511,77 +532,175 @@ app.post("/api/blogs/:id/comments", async (req, res) => {
 });
 
 // Add reply to a comment
-app.post("/api/blogs/:blogId/comments/:commentId/replies", async (req, res) => {
+app.post(
+  "/api/blogs/:blogId/comments/:commentId/replies",
+  authenticate,
+  async (req, res) => {
+    try {
+      const parentComment = await Comment.findById(req.params.commentId);
+      if (!parentComment) {
+        return res.status(404).send("Parent comment not found");
+      }
+
+      const reply = new Comment({
+        blogId: req.params.blogId,
+        userId: req.user._id, // 👈 Add userId here
+        name: req.body.name,
+        email: req.body.email,
+        text: req.body.text,
+        isReply: true,
+        parentCommentId: req.params.commentId,
+      });
+
+      await reply.save();
+      await reply.populate("userId", "username profilePicture");
+      parentComment.replies.push(reply._id);
+      await parentComment.save();
+
+      res.status(201).json(reply);
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+// Like/unlike a comment or reply
+app.post(
+  "/api/blogs/:blogId/comments/:commentId/like",
+  authenticate,
+  async (req, res) => {
+    try {
+      const comment = await Comment.findById(req.params.commentId);
+      const userId = req.user._id;
+
+      if (!comment) {
+        return res.status(404).send("Comment not found");
+      }
+
+      const userIndex = comment.likedBy.indexOf(userId);
+
+      if (userIndex === -1) {
+        comment.likes += 1;
+        comment.likedBy.push(userId);
+      } else {
+        comment.likes -= 1;
+        comment.likedBy.splice(userIndex, 1);
+      }
+
+      await comment.save();
+
+      res.json({
+        likes: comment.likes,
+        likedBy: comment.likedBy,
+      });
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+// Update a comment
+app.put(
+  "/api/blogs/:blogId/comments/:commentId",
+  authenticate,
+  async (req, res) => {
+    try {
+      const comment = await Comment.findOneAndUpdate(
+        {
+          _id: req.params.commentId,
+          email: req.user.email, // Ensure only the owner can update
+        },
+        { text: req.body.text, updatedAt: new Date() },
+        { new: true }
+      );
+
+      if (!comment) {
+        return res.status(404).send("Comment not found or unauthorized");
+      }
+
+      res.json(comment);
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+// Delete a comment
+app.delete(
+  "/api/blogs/:blogId/comments/:commentId",
+  authenticate,
+  async (req, res) => {
+    try {
+      // First check if it's a reply and remove from parent
+      const comment = await Comment.findById(req.params.commentId);
+      if (!comment) {
+        return res.status(404).send("Comment not found");
+      }
+
+      // Check if user is the owner
+      if (comment.email !== req.user.email) {
+        return res.status(403).send("Unauthorized");
+      }
+
+      // If this is a reply, remove from parent's replies array
+      if (comment.isReply && comment.parentCommentId) {
+        await Comment.findByIdAndUpdate(comment.parentCommentId, {
+          $pull: { replies: comment._id },
+        });
+      }
+
+      // If this is a parent comment, delete all its replies first
+      if (!comment.isReply && comment.replies.length > 0) {
+        await Comment.deleteMany({ _id: { $in: comment.replies } });
+      }
+
+      // Finally delete the comment itself
+      await Comment.findByIdAndDelete(req.params.commentId);
+
+      res.send("Comment deleted successfully");
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
+);
+
+app.post("/api/blogs/:id/like", auth, async (req, res) => {
   try {
-    const parentComment = await Comment.findById(req.params.commentId);
-    if (!parentComment) {
-      return res.status(404).send("Parent comment not found");
+    const blogId = req.params.id;
+    const userId = req.user.id; // From auth middleware
+
+    const existingLike = await Like.findOne({ blogId, userId });
+
+    if (existingLike) {
+      // Unlike
+      await existingLike.deleteOne();
+    } else {
+      // Like
+      await Like.create({ blogId, userId });
     }
 
-    const reply = new Comment({
-      blogId: req.params.blogId,
-      name: req.body.name,
-      email: req.body.email,
-      text: req.body.text,
-      isReply: true,
-      parentCommentId: req.params.commentId,
+    const likeCount = await Like.countDocuments({ blogId });
+    await Blog.findByIdAndUpdate(blogId, { likes: likeCount });
+
+    res.status(200).json({ likes: likeCount, liked: !existingLike });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.get("/api/blogs/:id", auth, async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
+
+    const liked = await Like.findOne({
+      blogId: req.params.id,
+      userId: req.user.id,
     });
 
-    await reply.save();
-
-    // Add the reply to the parent comment's replies array
-    parentComment.replies.push(reply._id);
-    await parentComment.save();
-
-    res.status(201).json(reply);
+    res.json({ ...blog.toObject(), liked: !!liked });
   } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-// Like/unlike a comment
-app.post("/api/blogs/:blogId/comments/:commentId/like", async (req, res) => {
-  try {
-    const comment = await Comment.findById(req.params.commentId);
-    const userId = req.body.userId; // You'll need to send userId from the frontend
-
-    if (!comment) {
-      return res.status(404).send("Comment not found");
-    }
-
-    const userIndex = comment.likedBy.indexOf(userId);
-
-    if (userIndex === -1) {
-      // Like the comment
-      comment.likes += 1;
-      comment.likedBy.push(userId);
-    } else {
-      // Unlike the comment
-      comment.likes -= 1;
-      comment.likedBy.splice(userIndex, 1);
-    }
-
-    await comment.save();
-    res.json(comment);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-app.post("/api/blogs/:id/like", async (req, res) => {
-  try {
-    const { action } = req.body; // 'like' or 'unlike'
-    const increment = action === "like" ? 1 : -1;
-
-    const blog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { likes: increment } },
-      { new: true }
-    );
-
-    res.json({ likes: blog.likes });
-  } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -649,12 +768,14 @@ app.get("/me", auth, async (req, res) => {
       education: user.education,
       role: user.role,
       profilePicture: user.profilePicture,
+      socialLinks: user.socialLinks,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user data" });
   }
 });
 
+// Updated user route (profile update endpoint)
 app.put("/profile", authUpdate, async (req, res) => {
   const allowedUpdates = [
     "username",
@@ -663,25 +784,64 @@ app.put("/profile", authUpdate, async (req, res) => {
     "education",
     "profilePicture",
     "role",
+    "socialLinks",
   ];
 
-  // Update all fields including role
-  allowedUpdates.forEach((field) => {
-    if (req.body[field] !== undefined) {
-      req.user[field] = req.body[field];
+  // Validate social links structure if provided
+  if (req.body.socialLinks) {
+    const validSocialLinks = [
+      "facebook",
+      "linkedin",
+      "github",
+      "instagram",
+      "portfolio",
+    ];
+
+    for (const key in req.body.socialLinks) {
+      if (!validSocialLinks.includes(key)) {
+        return res.status(400).json({
+          message: `Invalid social link type: ${key}`,
+        });
+      }
     }
-  });
+  }
 
   try {
+    // Update allowed fields
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        // Special handling for socialLinks to merge with existing
+        if (field === "socialLinks") {
+          req.user.socialLinks = {
+            ...req.user.socialLinks,
+            ...req.body.socialLinks,
+          };
+        } else {
+          req.user[field] = req.body[field];
+        }
+      }
+    });
+
     await req.user.save();
 
-    // Return updated user data but don't include sensitive info
+    // Return updated user data without sensitive info
     const userToReturn = req.user.toObject();
     delete userToReturn.password;
+    delete userToReturn.tokens;
+    delete userToReturn.verificationToken;
+    delete userToReturn.verificationTokenExpires;
 
-    res.json(userToReturn);
+    res.json({
+      success: true,
+      user: userToReturn,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Failed to update profile" });
+    console.error("Profile update error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
   }
 });
 

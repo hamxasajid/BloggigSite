@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./BlogDetails.css";
 import {
   FaCalendarAlt,
   FaClock,
@@ -13,11 +14,41 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaReply,
-  FaRegComment,
+  FaEdit,
+  FaTrash,
+  FaEllipsisV,
+  FaRegBookmark,
+  FaBookmark,
+  FaShare,
 } from "react-icons/fa";
 import { BiCategory } from "react-icons/bi";
 import { FiTag } from "react-icons/fi";
-import "./BlogDetails.css";
+import {
+  Dropdown,
+  Modal,
+  Badge,
+  Button,
+  Form,
+  Card,
+  Container,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+} from "react-bootstrap";
+import { formatDistanceToNow } from "date-fns";
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  if (!dateString || isNaN(date.getTime())) {
+    return "Unknown date"; // fallback
+  }
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 const BlogDetails = () => {
   const { id } = useParams();
@@ -29,34 +60,50 @@ const BlogDetails = () => {
   const [newComment, setNewComment] = useState("");
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [user, setUser] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const [editingComment, setEditingComment] = useState(null);
+  const [editContent, setEditContent] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [isSharing, setIsSharing] = useState(false);
+  // const url = "http://localhost:5000";
   const url = "https://bloggigsite-production.up.railway.app";
 
-  const COMMENTS_PER_PAGE = 3;
+  const COMMENTS_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const blogRes = await axios.get(`${url}/api/blogs/${id}`);
+        const token = localStorage.getItem("token");
+        const blogRes = await axios.get(`${url}/api/blogs/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setBlog(blogRes.data);
         setLikes(blogRes.data.likes || 0);
+        setHasLiked(blogRes.data.liked || false);
 
         if (blogRes.data.allowComments) {
-          const commentsRes = await axios.get(`${url}/api/blogs/${id}/comments`);
+          const commentsRes = await axios.get(
+            `${url}/api/blogs/${id}/comments`
+          );
+          console.log(commentsRes.data);
           setComments(commentsRes.data);
         }
 
-        const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || [];
-        setHasLiked(likedPosts.includes(id));
-
-        // Check if user is logged in
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
+
+        // Check if blog is bookmarked
+        const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+        setBookmarked(bookmarks.includes(id));
       } catch (err) {
         setError(
           err.response?.data?.message ||
@@ -71,11 +118,39 @@ const BlogDetails = () => {
     fetchData();
   }, [id]);
 
+  const handleBookmark = () => {
+    const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+    if (bookmarked) {
+      const updatedBookmarks = bookmarks.filter((blogId) => blogId !== id);
+      localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
+    } else {
+      localStorage.setItem("bookmarks", JSON.stringify([...bookmarks, id]));
+    }
+    setBookmarked(!bookmarked);
+  };
+
+  const handleShare = () => {
+    setIsSharing(true);
+    if (navigator.share) {
+      navigator
+        .share({
+          title: blog.title,
+          text: `Check out this blog post: ${blog.title}`,
+          url: window.location.href,
+        })
+        .then(() => setIsSharing(false))
+        .catch(() => setIsSharing(false));
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setIsSharing(false);
+      alert("Link copied to clipboard!");
+    }
+  };
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
-    // Check if user is logged in
     if (!user) {
       navigate("/login");
       return;
@@ -108,7 +183,6 @@ const BlogDetails = () => {
   const handleReplySubmit = async (parentCommentId) => {
     if (!replyContent.trim()) return;
 
-    // Check if user is logged in
     if (!user) {
       navigate("/login");
       return;
@@ -150,7 +224,6 @@ const BlogDetails = () => {
   };
 
   const handleLikeComment = async (commentId) => {
-    // Check if user is logged in
     if (!user) {
       navigate("/login");
       return;
@@ -196,70 +269,125 @@ const BlogDetails = () => {
         })
       );
     } catch (err) {
-      console.error("Like error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Failed to like comment");
     }
   };
 
   const handleLikeToggle = async () => {
-    // Check if user is logged in
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) return navigate("/login");
 
     try {
       const token = localStorage.getItem("token");
-      const newHasLiked = !hasLiked;
-      const action = newHasLiked ? "like" : "unlike";
-
-      setHasLiked(newHasLiked);
-      setLikes(newHasLiked ? likes + 1 : likes - 1);
-
-      let likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || [];
-      if (newHasLiked) {
-        if (!likedPosts.includes(id)) {
-          likedPosts.push(id);
-        }
-      } else {
-        likedPosts = likedPosts.filter((postId) => postId !== id);
-      }
-      localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-
-      await axios.post(
+      const response = await axios.post(
         `${url}/api/blogs/${id}/like`,
-        { action },
+        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
+
+      setHasLiked(response.data.liked);
+      setLikes(response.data.likes);
     } catch {
-      setHasLiked(!hasLiked);
-      setLikes(hasLiked ? likes - 1 : likes + 1);
       setError("Failed to update like status");
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  function formatCommentDate(dateString) {
+    const date = new Date(dateString);
+
+    if (!dateString || isNaN(date.getTime())) {
+      return "Unknown date"; // fallback
+    }
+
+    return formatDistanceToNow(date, { addSuffix: true });
+  }
+
+  const startEditComment = (comment) => {
+    setEditingComment(comment._id);
+    setEditContent(comment.text);
   };
 
-  const formatCommentDate = (dateString) => {
-    const options = {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  const handleEditSubmit = async (commentId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${url}/api/blogs/${id}/comments/${commentId}`,
+        { text: editContent },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setComments(
+        comments.map((comment) => {
+          if (comment._id === commentId) {
+            return { ...comment, text: editContent };
+          }
+          if (comment.replies) {
+            const updatedReplies = comment.replies.map((reply) => {
+              if (reply._id === commentId) {
+                return { ...reply, text: editContent };
+              }
+              return reply;
+            });
+            return { ...comment, replies: updatedReplies };
+          }
+          return comment;
+        })
+      );
+
+      setEditingComment(null);
+      setEditContent("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update comment");
+    }
+  };
+
+  const confirmDelete = (commentId) => {
+    setCommentToDelete(commentId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteComment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${url}/api/blogs/${id}/comments/${commentToDelete}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Remove the comment from state
+      setComments(
+        comments.filter((comment) => {
+          if (comment._id === commentToDelete) return false;
+          if (comment.replies) {
+            comment.replies = comment.replies.filter(
+              (reply) => reply._id !== commentToDelete
+            );
+          }
+          return true;
+        })
+      );
+
+      setShowDeleteModal(false);
+      setCommentToDelete(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete comment");
+    }
+  };
+
+  const isCommentLikedByUser = (comment) => {
+    return comment.likedBy && user && comment.likedBy.includes(user._id);
+  };
+
+  const isUserComment = (comment) => {
+    return user && comment.email === user.email;
   };
 
   const totalPages = Math.ceil(comments.length / COMMENTS_PER_PAGE);
@@ -281,335 +409,481 @@ const BlogDetails = () => {
     }
   };
 
-  const isCommentLikedByUser = (comment) => {
-    return comment.likedBy && user && comment.likedBy.includes(user._id);
-  };
-
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
-      </div>
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "80vh" }}
+      >
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="alert alert-danger">{error}</div>
-        <Link to="/blogs" className="btn btn-primary">
+      <Container className="my-5">
+        <Alert variant="danger" className="mb-4">
+          {error}
+        </Alert>
+        <Button as={Link} to="/blogs" variant="primary">
           Back to Blogs
-        </Link>
-      </div>
+        </Button>
+      </Container>
     );
   }
 
   if (!blog) {
     return (
-      <div className="error-container">
-        <div className="alert alert-warning">Blog post not found</div>
-        <Link to="/blogs" className="btn btn-primary">
+      <Container className="my-5">
+        <Alert variant="warning" className="mb-4">
+          Blog post not found
+        </Alert>
+        <Button as={Link} to="/blogs" variant="primary">
           Back to Blogs
-        </Link>
-      </div>
+        </Button>
+      </Container>
     );
   }
 
-  return (
-    <div className="blog-details-container">
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-lg-9">
-            <div className="back-button-container">
-              <Link to="/blogs" className="back-button">
-                <FaArrowLeft className="icon" />
-                Back to Blogs
-              </Link>
-            </div>
+  const renderCommentActions = (comment, isReply = false) => {
+    return (
+      <div className="d-flex gap-2 align-items-center">
+        <Button
+          size="sm"
+          variant={
+            isCommentLikedByUser(comment) ? "primary" : "outline-primary"
+          }
+          onClick={() => handleLikeComment(comment._id)}
+          disabled={!user}
+          title={!user ? "Login to like" : ""}
+          className="d-flex align-items-center"
+        >
+          {isCommentLikedByUser(comment) ? <FaThumbsUp /> : <FaRegThumbsUp />}
+          <span className="ms-1">{comment.likes || 0}</span>
+        </Button>
 
-            <article className="blog-card">
-              <div className="cover-image-container">
-                <img
-                  src={blog.coverImage}
-                  alt={blog.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    flexShrink: 0,
-                    borderRadius: "8px",
-                  }}
-                />
+        {!isReply && user && (
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() =>
+              setReplyingTo(replyingTo === comment._id ? null : comment._id)
+            }
+            className="d-flex align-items-center"
+          >
+            <FaReply className="me-1" />
+            Reply
+          </Button>
+        )}
+
+        {isUserComment(comment) && (
+          <Dropdown>
+            <Dropdown.Toggle
+              variant="link"
+              id={`dropdown-comment-${comment._id}`}
+              className="text-dark p-0 no-caret"
+              style={{ boxShadow: "none" }}
+            >
+              <FaEllipsisV />
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => startEditComment(comment)}>
+                <FaEdit className="me-2" />
+                Edit
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => confirmDelete(comment._id)}>
+                <FaTrash className="me-2 text-danger" />
+                Delete
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        )}
+      </div>
+    );
+  };
+
+  const renderComment = (comment, isReply = false) => {
+    return (
+      <Card
+        key={comment._id}
+        className={`mb-3 ${
+          isReply ? "ms-md-4 ms-3 border-start border-primary" : ""
+        }`}
+        border="light"
+      >
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="d-flex align-items-center">
+              <div
+                className="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center"
+                style={{ width: "50px", height: "50px", overflow: "hidden" }}
+              >
+                {comment.userId?.profilePicture ? (
+                  <img
+                    src={comment.userId.profilePicture}
+                    alt={comment.userId.username}
+                    className="w-100 h-100"
+                    style={{
+                      flexShrink: 0,
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                    }}
+                  />
+                ) : (
+                  <FaUser size={18} />
+                )}
               </div>
 
-              <div className="blog-header">
-                <div className="meta-info">
-                  <span className={`status-badge ${blog.status}`}>
+              <div>
+                <h6 className="mb-0 fw-bold">{comment.name}</h6>
+                <small className="text-muted">
+                  {formatCommentDate(comment.createdAt)}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          {editingComment === comment._id ? (
+            <div className="mb-3">
+              <Form.Control
+                as="textarea"
+                rows={3}
+                className="mb-2"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+              />
+              <div className="d-flex gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleEditSubmit(comment._id)}
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => {
+                    setEditingComment(null);
+                    setEditContent("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-3">
+              <p className="mb-0">{comment.text}</p>
+            </div>
+          )}
+
+          {renderCommentActions(comment, isReply)}
+
+          {replyingTo === comment._id && user && !isReply && (
+            <div className="mt-3">
+              <Form.Control
+                as="textarea"
+                rows={3}
+                className="mb-2"
+                placeholder="Write your reply here*"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                required
+              />
+              <div className="d-flex gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleReplySubmit(comment._id)}
+                >
+                  <FaPaperPlane className="me-1" />
+                  Post Reply
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => {
+                    setReplyingTo(null);
+                    setReplyContent("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-3">
+              {comment.replies.map((reply) => renderComment(reply, true))}
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    );
+  };
+
+  return (
+    <Container className="py-4 py-lg-5">
+      <Row className="justify-content-center">
+        <Col lg={9}>
+          <Button
+            as={Link}
+            to="/blogs"
+            variant="outline-primary"
+            className="mb-4 d-inline-flex align-items-center"
+          >
+            <FaArrowLeft className="me-2" />
+            Back to Blogs
+          </Button>
+
+          <Card className="mb-4 border-0 shadow-sm">
+            <div className="ratio ratio-16x9">
+              <Card.Img
+                variant="top"
+                src={blog.coverImage}
+                alt={blog.title}
+                style={{
+                  height: "auto",
+                  aspectRatio: "16 / 9",
+                  flexShrink: 0,
+                }}
+              />
+            </div>
+            <Card.Body>
+              <div className="d-flex justify-content-between flex-wrap gap-2 mb-3">
+                <div className="start d-flex flex-wrap gap-2 mb-3">
+                  <Badge
+                    bg={blog.status === "published" ? "success" : "secondary"}
+                    className="d-flex align-items-center"
+                  >
                     {blog.status.charAt(0).toUpperCase() + blog.status.slice(1)}
-                  </span>
-                  <span className="meta-item">
-                    <FaCalendarAlt className="icon" />
+                  </Badge>
+
+                  <small className="text-muted d-flex align-items-center">
+                    <FaCalendarAlt className="me-1" />
                     {formatDate(blog.createdAt)}
-                  </span>
-                  <span className="meta-item">
-                    <FaClock className="icon" />
+                  </small>
+
+                  <small className="text-muted d-flex align-items-center">
+                    <FaClock className="me-1" />
                     {blog.readTime} min read
-                  </span>
+                  </small>
+
                   {blog.allowComments && (
-                    <span className="meta-item">
-                      <FaComment className="icon" />
+                    <small className="text-muted d-flex align-items-center">
+                      <FaComment className="me-1" />
                       {comments.length} comments
-                    </span>
+                    </small>
                   )}
                 </div>
 
-                <h1 className="blog-title">{blog.title}</h1>
-
-                <div className="tags-container">
-                  <span className="category-badge">
-                    <BiCategory className="icon" />
-                    {blog.category}
-                  </span>
-                  {blog.tags &&
-                    blog.tags.map((tag, index) => (
-                      <span key={index} className="tag-badge">
-                        <FiTag className="icon" />
-                        {tag}
-                      </span>
-                    ))}
+                <div className="end d-flex justify-content-center align-items-center gap-2">
+                  <small className="text-muted d-flex align-items-center">
+                    <FaUser className="me-1" />
+                    {blog.user?.username}
+                    {blog.user?.isVerified && blog.user?.role === "author" && (
+                      <i
+                        className="ms-1 bi bi-patch-check-fill text-primary"
+                        title="Verified Author"
+                      ></i>
+                    )}
+                  </small>
                 </div>
               </div>
 
-              <div className="blog-content">
-                <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+              <Card.Title as="h1" className="mb-3 fw-bold">
+                {blog.title}
+              </Card.Title>
+
+              <div className="d-flex flex-wrap gap-2 mb-4">
+                <Badge bg="info" className="d-flex align-items-center">
+                  <BiCategory className="me-1" />
+                  {blog.category}
+                </Badge>
+                {blog.tags &&
+                  blog.tags.map((tag, index) => (
+                    <Badge
+                      key={index}
+                      bg="light"
+                      text="dark"
+                      className="d-flex align-items-center"
+                    >
+                      <FiTag className="me-1" />
+                      {tag}
+                    </Badge>
+                  ))}
               </div>
 
-              <div className="like-section">
-                <button
-                  className={`like-button ${hasLiked ? "liked" : ""}`}
+              <div
+                className="mb-4"
+                dangerouslySetInnerHTML={{ __html: blog.content }}
+              />
+
+              <div className="d-flex align-items-center gap-3">
+                <Button
+                  variant={hasLiked ? "primary" : "outline-primary"}
                   onClick={handleLikeToggle}
+                  className="d-flex align-items-center"
                 >
                   {hasLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
-                  <span>
-                    {likes} {likes === 1 ? "Like" : "Likes"}
-                  </span>
-                </button>
+                  <span className="ms-2">{likes}</span>
+                </Button>
+                <Button
+                  variant={bookmarked ? "warning" : "outline-warning"}
+                  onClick={handleBookmark}
+                  title={bookmarked ? "Remove bookmark" : "Bookmark this post"}
+                >
+                  {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  className="share-btn"
+                  onClick={handleShare}
+                  disabled={isSharing}
+                >
+                  <FaShare className="me-1" />
+                  Share
+                </Button>
               </div>
-            </article>
+            </Card.Body>
+          </Card>
 
-            {blog.allowComments && (
-              <div className="comments-section">
-                <h3 className="comments-title">
-                  <FaComment className="icon" />
+          {blog.allowComments && (
+            <Card className="mb-4 border-0 shadow-sm">
+              <Card.Body>
+                <Card.Title as="h3" className="mb-4 d-flex align-items-center">
+                  <FaComment className="me-2" />
                   {comments.length}{" "}
                   {comments.length === 1 ? "Comment" : "Comments"}
-                </h3>
+                </Card.Title>
 
                 {user ? (
-                  <form onSubmit={handleCommentSubmit} className="comment-form">
-                    <h4>Leave a Comment</h4>
-                    <div className="form-group">
-                      <input
+                  <Form onSubmit={handleCommentSubmit} className="mb-4">
+                    <h5 className="mb-3">Leave a Comment</h5>
+                    <Form.Group className="mb-3">
+                      <Form.Control
                         type="text"
                         value={user.username}
                         disabled
                         placeholder="Your Name*"
                         required
                       />
-                    </div>
-                    <div className="form-group">
-                      <input
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
                         type="email"
                         value={user.email}
                         disabled
                         placeholder="Your Email*"
                         required
                       />
-                    </div>
-                    <div className="form-group">
-                      <textarea
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        as="textarea"
+                        rows={4}
                         placeholder="Write your comment here*"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         required
                       />
-                    </div>
-                    <button type="submit" className="submit-button">
-                      <FaPaperPlane className="icon" />
+                    </Form.Group>
+                    <Button variant="primary" type="submit">
+                      <FaPaperPlane className="me-1" />
                       Post Comment
-                    </button>
-                  </form>
+                    </Button>
+                  </Form>
                 ) : (
-                  <div className="login-prompt">
-                    <p>
-                      Please <Link to="/login">login</Link> to leave a comment.
-                    </p>
-                  </div>
+                  <Alert variant="info">
+                    Please <Link to="/login">login</Link> to leave a comment.
+                  </Alert>
                 )}
 
                 <div className="comments-list">
                   {comments.length === 0 ? (
-                    <p className="no-comments">
+                    <Alert variant="secondary">
                       No comments yet. Be the first to comment!
-                    </p>
+                    </Alert>
                   ) : (
                     <>
-                      {visibleComments.map((comment) => (
-                        <div key={comment._id} className="comment-card">
-                          <div className="comment-header">
-                            <div className="comment-author">
-                              <FaUser className="icon" />
-                              <span>{comment.name}</span>
-                            </div>
-                            <span className="comment-date">
-                              {formatCommentDate(comment.createdAt)}
-                            </span>
-                          </div>
-                          <div className="comment-text">{comment.text}</div>
-
-                          <div className="comment-actions">
-                            <button
-                              className={`like-button ${
-                                isCommentLikedByUser(comment) ? "liked" : ""
-                              }`}
-                              onClick={() => handleLikeComment(comment._id)}
-                              disabled={!user}
-                              title={!user ? "Login to like" : ""}
-                            >
-                              {isCommentLikedByUser(comment) ? (
-                                <FaThumbsUp />
-                              ) : (
-                                <FaRegThumbsUp />
-                              )}
-                              <span>{comment.likes || 0}</span>
-                            </button>
-
-                            {user && (
-                              <button
-                                className="reply-button"
-                                onClick={() =>
-                                  setReplyingTo(
-                                    replyingTo === comment._id
-                                      ? null
-                                      : comment._id
-                                  )
-                                }
-                              >
-                                <FaReply className="icon" />
-                                <span>Reply</span>
-                              </button>
-                            )}
-                          </div>
-
-                          {replyingTo === comment._id && user && (
-                            <div className="reply-form">
-                              <textarea
-                                placeholder="Write your reply here*"
-                                value={replyContent}
-                                onChange={(e) => setReplyContent(e.target.value)}
-                                required
-                              />
-                              <div className="reply-buttons">
-                                <button
-                                  className="cancel-reply"
-                                  onClick={() => {
-                                    setReplyingTo(null);
-                                    setReplyContent("");
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  className="submit-reply"
-                                  onClick={() => handleReplySubmit(comment._id)}
-                                >
-                                  <FaPaperPlane className="icon" />
-                                  Post Reply
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {comment.replies && comment.replies.length > 0 && (
-                            <div className="replies-container">
-                              {comment.replies.map((reply) => (
-                                <div key={reply._id} className="reply-card">
-                                  <div className="comment-header">
-                                    <div className="comment-author">
-                                      <FaUser className="icon" />
-                                      <span>{reply.name}</span>
-                                    </div>
-                                    <span className="comment-date">
-                                      {formatCommentDate(reply.createdAt)}
-                                    </span>
-                                  </div>
-                                  <div className="comment-text">
-                                    {reply.text}
-                                  </div>
-                                  <div className="comment-actions">
-                                    <button
-                                      className={`like-button ${
-                                        isCommentLikedByUser(reply)
-                                          ? "liked"
-                                          : ""
-                                      }`}
-                                      onClick={() => handleLikeComment(reply._id)}
-                                      disabled={!user}
-                                      title={!user ? "Login to like" : ""}
-                                    >
-                                      {isCommentLikedByUser(reply) ? (
-                                        <FaThumbsUp />
-                                      ) : (
-                                        <FaRegThumbsUp />
-                                      )}
-                                      <span>{reply.likes || 0}</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      {visibleComments.map((comment) => renderComment(comment))}
 
                       {totalPages > 1 && (
-                        <div className="pagination-controls">
-                          <button
+                        <div className="d-flex justify-content-between align-items-center mt-4">
+                          <Button
+                            variant="outline-primary"
                             onClick={handlePrevPage}
                             disabled={currentPage === 1}
-                            className="pagination-button"
+                            className="d-flex align-items-center"
                           >
-                            <FaChevronLeft className="icon" />
-                            Back
-                          </button>
-                          <span className="page-indicator">
+                            <FaChevronLeft className="me-1" />
+                            Previous
+                          </Button>
+                          <span className="text-muted">
                             Page {currentPage} of {totalPages}
                           </span>
-                          <button
+                          <Button
+                            variant="outline-primary"
                             onClick={handleNextPage}
                             disabled={currentPage === totalPages}
-                            className="pagination-button"
+                            className="d-flex align-items-center"
                           >
                             Next
-                            <FaChevronRight className="icon" />
-                          </button>
+                            <FaChevronRight className="ms-1" />
+                          </Button>
                         </div>
                       )}
                     </>
                   )}
                 </div>
-              </div>
-            )}
+              </Card.Body>
+            </Card>
+          )}
 
-            <div className="back-button-container bottom">
-              <Link to="/blogs" className="back-button">
-                <FaArrowLeft className="icon" />
-                Back to Blogs
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          <Button
+            as={Link}
+            to="/blogs"
+            variant="outline-primary"
+            className="d-inline-flex align-items-center"
+          >
+            <FaArrowLeft className="me-2" />
+            Back to Blogs
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this comment? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteComment}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 

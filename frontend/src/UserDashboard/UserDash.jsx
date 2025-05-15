@@ -26,6 +26,7 @@ const UserDash = () => {
   });
   const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
+  // const url = "http://localhost:5000";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +54,13 @@ const UserDash = () => {
           education: userResponse.data.education || "",
           role: userResponse.data.role || "user",
           profilePicture: userResponse.data.profilePicture || "",
+          socialLinks: userResponse.data.socialLinks || {
+            facebook: "",
+            linkedin: "",
+            github: "",
+            instagram: "",
+            portfolio: "",
+          },
         };
 
         setUserData(user);
@@ -156,7 +164,7 @@ const UserDash = () => {
                       </div>
                     )}
                     {userData.role === "author" && (
-                      <span className="position-absolute bottom-0 start-100 translate-middle badge rounded-pill bg-success">
+                      <span className="position-absolute top-100 start-50 translate-middle badge rounded-pill bg-success">
                         Author
                       </span>
                     )}
@@ -167,9 +175,69 @@ const UserDash = () => {
                     )}
                   </div>
 
-                  <div className="flex-grow-1">
-                    <h2 className="mb-1 fw-bold">{userData.username}</h2>
+                  <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center align-items-md-start">
+                    <h2 className="mb-1 fw-bold d-flex align-items-center text-center gap-1">
+                      {userData.username}
+                      {userData.role === "author" && (
+                        <i
+                          className="bi bi-patch-check-fill text-primary"
+                          title="Verified Author"
+                        ></i>
+                      )}
+                    </h2>
+
                     <p className="text-muted mb-2">{userData.email}</p>
+
+                    <div className="SocialLinks d-flex gap-3 mt-2">
+                      {userData.socialLinks &&
+                        Object.entries(userData.socialLinks)
+                          .filter(([, value]) => value !== "")
+                          .map(([key, value]) => {
+                            let icon;
+                            switch (key) {
+                              case "linkedin":
+                                icon = (
+                                  <i className="bi bi-linkedin text-primary fs-5"></i>
+                                );
+                                break;
+                              case "github":
+                                icon = <i className="bi bi-github fs-5"></i>;
+                                break;
+                              case "portfolio":
+                                icon = (
+                                  <i className="bi bi-globe text-success fs-5"></i>
+                                );
+                                break;
+                              case "facebook":
+                                icon = (
+                                  <i className="bi bi-facebook text-primary fs-5"></i>
+                                );
+                                break;
+                              case "instagram":
+                                icon = (
+                                  <i className="bi bi-instagram text-danger fs-5"></i>
+                                );
+                                break;
+                              default:
+                                icon = (
+                                  <i className="bi bi-link-45deg fs-5"></i>
+                                );
+                            }
+
+                            return (
+                              <a
+                                key={key}
+                                href={value}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-decoration-none text-dark"
+                              >
+                                {icon}
+                              </a>
+                            );
+                          })}
+                    </div>
+
                     {!profileComplete && (
                       <div className="alert alert-warning py-2 px-3 d-inline-block">
                         <small className="fw-medium">

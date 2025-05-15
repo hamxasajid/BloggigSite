@@ -1,0 +1,65 @@
+.footer-links .nav-link {
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: color 0.3s ease;
+}
+.footer-links .nav-link:hover {
+  color: #fff !important;
+}
+
+.same-color {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+.scroll-top-btn {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+.scroll-top-btn:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+.social-links a {
+  transition: transform 0.3s ease;
+}
+.social-links a:hover {
+  transform: translateY(-3px);
+  color: var(--bs-primary) !important;
+}
+
+/* In your CSS file */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: all 0.3s ease-out;
+  z-index: 1000;
+  outline: none;
+}
+
+.scroll-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-top-btn:hover {
+  background-color: #2563eb;
+  transform: translateY(-0.25rem);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}

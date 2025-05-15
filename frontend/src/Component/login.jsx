@@ -15,6 +15,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const backendUrl = "https://bloggigsite-production.up.railway.app";
+  // const backendUrl = "http://localhost:5000";
 
   useEffect(() => {
     // Check if the session has expired on mount

@@ -24,6 +24,7 @@ const ManageUser = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const url = "https://bloggigsite-production.up.railway.app";
+  // const url = "http://localhost:5000";
   const usersPerPage = 10;
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const ManageUser = () => {
 
         const updatedUser = { ...userToUpdate, role: "author" };
 
-        await axios.put(`${url}/api/users/${id}`, updatedUser);
+        await axios.put(`${url}/users/${id}`, updatedUser);
 
         setUsers((prev) =>
           prev.map((user) =>
