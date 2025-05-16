@@ -42,8 +42,8 @@ const CompleteProfile = () => {
   const [activeSection, setActiveSection] = useState("basic");
 
   const navigate = useNavigate();
-  // const url = "https://bloggigsite-production.up.railway.app";
-  const url = "http://localhost:5000";
+  const url = "https://bloggigsite-production.up.railway.app";
+  // const url = "http://localhost:5000";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
