@@ -1,11 +1,186 @@
 .dropdown-toggle.no-caret::after {
   display: none !important;
 }
-.d-flex {
-  margin-top: 0 !important;
+/* BlogDetails.css */
+.blog-details-container {
+  min-height: 100vh;
 }
 
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.blog-content ul,
+.blog-content ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+.blog-content li {
+  margin-bottom: 0.5rem;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #0d6efd;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #555;
+}
+
+.blog-content pre {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.blog-content code {
+  background-color: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.likes-preview {
+  position: relative;
+  padding-left: 10px;
+}
+
+.likes-preview:hover {
+  opacity: 0.9;
+}
+
+.user-avatar {
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
+  z-index: 10 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.no-caret::after {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .blog-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .blog-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .blog-content h4 {
+    font-size: 1.1rem;
+  }
+
+  .blog-content pre {
+    font-size: 0.85rem;
+  }
+}
+
+/* Animation for modal */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out, opacity 0.3s ease;
+  transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+  transform: translate(0, 0);
+}
+
+/* Custom scrollbar for likes modal */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+/* ////////////////////// */
+
+.bookmark-btn,
+.share-btn {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 90px;
+  height: 38px;
+}
+
+.bookmark-btn:hover,
 .share-btn:hover {
-  color: #fff !important;
-  background-color: #333 !important;
+  background-color: #f1f3f5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.bookmark-btn:active,
+.share-btn:active {
+  transform: translateY(0);
+}
+
+.bookmark-btn.bookmarked {
+  color: #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.bookmark-btn.bookmarked:hover {
+  background-color: rgba(255, 193, 7, 0.15);
+}
+
+.bookmark-icon,
+.share-icon {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.bookmark-btn:hover .bookmark-icon {
+  transform: scale(1.1);
+}
+
+.share-btn:hover .share-icon {
+  transform: translateX(2px);
+}
+
+.btn-label {
+  transition: opacity 0.3s ease;
+}
+
+.share-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

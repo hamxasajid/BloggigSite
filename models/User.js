@@ -39,11 +39,6 @@ const userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      trim: true,
-      match: [
-        /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-        "Please provide a valid image URL",
-      ],
     },
     tokens: [
       {

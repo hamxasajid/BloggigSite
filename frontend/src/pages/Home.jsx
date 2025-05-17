@@ -120,7 +120,7 @@ const Home = () => {
                     to={`/blog/${post._id}`}
                     onClick={scrollToTop}
                     className="position-relative overflow-hidden rounded-top"
-                    style={{ display: "block", height: "200px" }}
+                    style={{ display: "block", height: "250px" }}
                   >
                     <img
                       src={
@@ -185,19 +185,13 @@ const Home = () => {
                     <Link
                       to={`/blog/${post._id}`}
                       onClick={scrollToTop}
-                      className="btn btn-outline-primary rounded-pill mt-auto align-self-start d-flex align-items-center px-4 py-2 hover-arrow"
-                      style={{
-                        transition: "all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1)",
-                      }}
+                      className="cta m-auto"
                     >
-                      Continue Reading
-                      <FaArrowRight
-                        className="ms-2 arrow-icon"
-                        style={{
-                          transition:
-                            "transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
-                        }}
-                      />
+                      <span>Continue Reading</span>
+                      <svg width="15px" height="10px" viewBox="0 0 13 10">
+                        <path d="M1,5 L11,5"></path>
+                        <polyline points="8 1 12 5 8 9"></polyline>
+                      </svg>
                     </Link>
                   </div>
                 </div>

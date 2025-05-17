@@ -1,11 +1,6 @@
 // src/App.js
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  BrowserRouter,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./Component/Navbar";
 import Footer from "./Component/Footer";
@@ -31,7 +26,7 @@ import CompleteProfile from "./UserDashboard/CompleteProfile";
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -62,7 +57,7 @@ function App() {
         <Route path="/Admindashboard/messages" element={<Message />} />
       </Routes>
       <Footer />
-    </BrowserRouter>
+    </>
   );
 }
 

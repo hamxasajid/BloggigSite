@@ -26,7 +26,6 @@ const UserDash = () => {
   });
   const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
-  // const url = "http://localhost:5000";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -353,7 +352,7 @@ const UserDash = () => {
                           Start writing a new blog post and share your ideas.
                         </p>
                         <button
-                          onClick={() => navigate("/Userdashboard/addblog")}
+                          onClick={() => navigate("/Userdashboard/createblog")}
                           className="btn btn-outline-success rounded-pill px-4"
                         >
                           Write Blog

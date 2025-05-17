@@ -161,7 +161,7 @@ const AdminDash = () => {
         </div>
 
         {/* Statistics Section */}
-        <div className="row g-2 g-md-3 mb-3 mb-md-4">
+        <div className="row g-2 g-md-3 mb-3 mb-md-4 ">
           <StatCard
             title="Total Users"
             value={stats.totalUsers}
@@ -201,7 +201,7 @@ const AdminDash = () => {
           <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
             <ActionCard
               title="Manage Blogs"
-              description="Manage all blog posts"
+              description="Manage all blog "
               icon={<FaBlog className="text-primary" />}
               link="/Admindashboard/viewallblogs"
               color="primary"
@@ -210,7 +210,7 @@ const AdminDash = () => {
           <div className="col-6 col-md-6 col-lg-3 mb-2 mb-md-3">
             <ActionCard
               title="Manage Users"
-              description="Manage user accounts"
+              description="Manage accounts"
               icon={<FaUsers className="text-danger" />}
               link="/Admindashboard/manageusers"
               color="danger"
@@ -318,7 +318,7 @@ const StatCard = ({
 const ActionCard = ({ title, description, icon, link, color, badge }) => {
   return (
     <div
-      className={`card border-0 shadow-sm hover-lift hover-shadow transition-all h-100`}
+      className={`card border-0 shadow-sm hover-lift hover-shadow transition-all h-100 py-3 py-md-4`}
     >
       <div className="card-body text-center p-3">
         {badge > 0 && (
@@ -335,9 +335,11 @@ const ActionCard = ({ title, description, icon, link, color, badge }) => {
           {icon}
         </div>
         <h5 className="h6 mb-1">{title}</h5>
-        <p className="text-muted small mb-2 h-25">{description}</p>
+        <p className="text-muted small mb-2 h-25 text-truncate">
+          {description}
+        </p>
         <a href={link} className={`btn btn-sm btn-${color} stretched-link`}>
-          Go to {title}
+          {title}
         </a>
       </div>
     </div>

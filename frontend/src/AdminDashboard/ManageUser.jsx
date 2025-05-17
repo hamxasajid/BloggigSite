@@ -24,7 +24,6 @@ const ManageUser = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const url = "https://bloggigsite-production.up.railway.app";
-  // const url = "http://localhost:5000";
   const usersPerPage = 10;
 
   useEffect(() => {

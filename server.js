@@ -688,6 +688,27 @@ app.post("/api/blogs/:id/like", auth, async (req, res) => {
   }
 });
 
+// GET /api/blogs/:id/likes
+app.get("/api/blogs/:id/likes", async (req, res) => {
+  try {
+    const blogId = req.params.id;
+
+    const likes = await Like.find({ blogId })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username profilePicture");
+
+    res.status(200).json(
+      likes.map((like) => ({
+        username: like.userId.username,
+        profilePicture: like.userId.profilePicture,
+        likedAt: like.createdAt,
+      }))
+    );
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 app.get("/api/blogs/:id", auth, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);

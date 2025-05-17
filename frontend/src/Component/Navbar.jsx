@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Context/AuthCon";
 import Swal from "sweetalert2";
@@ -17,6 +17,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const offcanvasRef = useRef(null);
   const toggleBtnRef = useRef(null);
+  const [profilePic, setProfilePic] = useState(null);
+
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setProfilePic(user.profilePicture);
+    }
+  }, [user]);
 
   const handleNavLinkClick = () => {
     // Close offcanvas menu if open
@@ -104,9 +111,9 @@ const Navbar = () => {
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  {user.profilePicture ? (
+                  {profilePic ? (
                     <img
-                      src={user.profilePicture}
+                      src={profilePic}
                       alt={user.username}
                       style={{
                         width: "32px",
@@ -266,7 +273,9 @@ const Navbar = () => {
                   <FaUserCircle size={32} className="text-primary" />
                 )}
                 <div>
-                  <h6 className="mb-0 fw-bold">{user.username}</h6>
+                  <h6 className="mb-0 fw-bold">
+                    <span>{user?.username || "User"}</span>
+                  </h6>
                   <small className="text-muted">
                     {user.role.toLowerCase() === "pending"
                       ? "User (Request to Author Pending)."

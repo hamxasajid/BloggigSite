@@ -52,7 +52,7 @@
 }
 
 .homeCard img {
-  aspect-ratio: 16/9;
+  aspect-ratio: 16/9 !important;
   height: auto;
   flex-shrink: 0;
   transition: transform 0.5s ease;
@@ -110,34 +110,6 @@
   transform: rotate(5deg) scale(1.1);
 }
 
-.cta-section {
-  background: linear-gradient(135deg, var(--bs-primary), #6f42c1);
-  position: relative;
-  overflow: hidden;
-}
-
-.cta-section::before {
-  content: "";
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.cta-section::after {
-  content: "";
-  position: absolute;
-  bottom: -80px;
-  left: -80px;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
 @media (max-width: 768px) {
   .hero-section {
     padding: 4rem 0;
@@ -161,4 +133,64 @@
 
 .hover-arrow:hover .arrow-icon {
   transform: translateX(4px);
+}
+
+/* From Uiverse.io by alexmaracinaru */
+.cta {
+  position: relative;
+  /* margin: auto; */
+  padding: 12px 18px;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.cta:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  border-radius: 50px;
+  background: #b1dae7;
+  width: 45px;
+  height: 45px;
+  transition: all 0.3s ease;
+}
+
+.cta span {
+  position: relative;
+  font-family: "Ubuntu", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #234567;
+}
+
+.cta svg {
+  position: relative;
+  top: 0;
+  margin-left: 10px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke: #234567;
+  stroke-width: 2;
+  transform: translateX(-5px);
+  transition: all 0.3s ease;
+}
+
+.cta:hover:before {
+  width: 100%;
+  background: #b1dae7;
+}
+
+.cta:hover svg {
+  transform: translateX(0);
+}
+
+.cta:active {
+  transform: scale(0.95);
 }

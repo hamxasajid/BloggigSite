@@ -20,6 +20,7 @@ import {
   FaRegBookmark,
   FaBookmark,
   FaShare,
+  FaTimes,
 } from "react-icons/fa";
 import { BiCategory } from "react-icons/bi";
 import { FiTag } from "react-icons/fi";
@@ -35,13 +36,15 @@ import {
   Col,
   Spinner,
   Alert,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { formatDistanceToNow } from "date-fns";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   if (!dateString || isNaN(date.getTime())) {
-    return "Unknown date"; // fallback
+    return "Unknown date";
   }
   return date.toLocaleDateString("en-US", {
     year: "numeric",
@@ -70,9 +73,10 @@ const BlogDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [isSharing, setIsSharing] = useState(false);
-  // const url = "http://localhost:5000";
+  const [likedUsers, setLikedUsers] = useState([]);
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [loadingLikes, setLoadingLikes] = useState(false);
   const url = "https://bloggigsite-production.up.railway.app";
-
   const COMMENTS_PER_PAGE = 5;
 
   useEffect(() => {
@@ -88,11 +92,22 @@ const BlogDetails = () => {
         setLikes(blogRes.data.likes || 0);
         setHasLiked(blogRes.data.liked || false);
 
+        // Fetch users who liked the post
+        if (blogRes.data.likes > 0) {
+          setLoadingLikes(true);
+          const likesRes = await axios.get(`${url}/api/blogs/${id}/likes`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setLikedUsers(likesRes.data);
+          setLoadingLikes(false);
+        }
+
         if (blogRes.data.allowComments) {
           const commentsRes = await axios.get(
             `${url}/api/blogs/${id}/comments`
           );
-          console.log(commentsRes.data);
           setComments(commentsRes.data);
         }
 
@@ -101,7 +116,6 @@ const BlogDetails = () => {
           setUser(JSON.parse(storedUser));
         }
 
-        // Check if blog is bookmarked
         const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
         setBookmarked(bookmarks.includes(id));
       } catch (err) {
@@ -116,7 +130,7 @@ const BlogDetails = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, user, likes]);
 
   const handleBookmark = () => {
     const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
@@ -175,6 +189,10 @@ const BlogDetails = () => {
       setComments([response.data, ...comments]);
       setNewComment("");
       setCurrentPage(1);
+      // Scroll to comments section
+      document.getElementById("comments-section")?.scrollIntoView({
+        behavior: "smooth",
+      });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit comment");
     }
@@ -290,20 +308,33 @@ const BlogDetails = () => {
 
       setHasLiked(response.data.liked);
       setLikes(response.data.likes);
+
+      // Update liked users list
+      if (response.data.liked) {
+        setLikedUsers((prev) => [
+          {
+            _id: user._id,
+            username: user.username,
+            profilePicture: user.profilePicture,
+            likedAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      } else {
+        setLikedUsers((prev) => prev.filter((u) => u._id !== user._id));
+      }
     } catch {
       setError("Failed to update like status");
     }
   };
 
-  function formatCommentDate(dateString) {
+  const formatCommentDate = (dateString) => {
     const date = new Date(dateString);
-
     if (!dateString || isNaN(date.getTime())) {
-      return "Unknown date"; // fallback
+      return "Unknown date";
     }
-
     return formatDistanceToNow(date, { addSuffix: true });
-  }
+  };
 
   const startEditComment = (comment) => {
     setEditingComment(comment._id);
@@ -362,7 +393,6 @@ const BlogDetails = () => {
         },
       });
 
-      // Remove the comment from state
       setComments(
         comments.filter((comment) => {
           if (comment._id === commentToDelete) return false;
@@ -400,12 +430,45 @@ const BlogDetails = () => {
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
+      window.scrollTo({
+        top: document.getElementById("comments-section")?.offsetTop - 20,
+        behavior: "smooth",
+      });
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
+      window.scrollTo({
+        top: document.getElementById("comments-section")?.offsetTop - 20,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const fetchLikedUsers = async () => {
+    try {
+      setLoadingLikes(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${url}/api/blogs/${id}/likes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setLikedUsers(response.data);
+    } catch {
+      setError("Failed to fetch likes data");
+    } finally {
+      setLoadingLikes(false);
+    }
+  };
+
+  const openLikesModal = () => {
+    if (likes === 0) return;
+    setShowLikesModal(true);
+    if (likedUsers.length === 0) {
+      fetchLikedUsers();
     }
   };
 
@@ -629,7 +692,7 @@ const BlogDetails = () => {
   };
 
   return (
-    <Container className="py-4 py-lg-5">
+    <Container className="py-4 py-lg-5 blog-details-container">
       <Row className="justify-content-center">
         <Col lg={9}>
           <Button
@@ -721,41 +784,124 @@ const BlogDetails = () => {
               </div>
 
               <div
-                className="mb-4"
+                className="mb-4 blog-content"
                 dangerouslySetInnerHTML={{ __html: blog.content }}
               />
 
-              <div className="d-flex align-items-center gap-3">
-                <Button
-                  variant={hasLiked ? "primary" : "outline-primary"}
-                  onClick={handleLikeToggle}
-                  className="d-flex align-items-center"
-                >
-                  {hasLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
-                  <span className="ms-2">{likes}</span>
-                </Button>
-                <Button
-                  variant={bookmarked ? "warning" : "outline-warning"}
-                  onClick={handleBookmark}
-                  title={bookmarked ? "Remove bookmark" : "Bookmark this post"}
-                >
-                  {bookmarked ? <FaBookmark /> : <FaRegBookmark />}
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  className="share-btn"
-                  onClick={handleShare}
-                  disabled={isSharing}
-                >
-                  <FaShare className="me-1" />
-                  Share
-                </Button>
+              <div className="d-flex align-items-center gap-3 mb-4 justify-content-between">
+                <div className="d-flex align-items-center ">
+                  <Button
+                    variant={hasLiked ? "primary" : "outline-primary"}
+                    onClick={handleLikeToggle}
+                    className="d-flex align-items-center me-2 liked-button"
+                  >
+                    {hasLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
+                    <span className="ms-2">{likes}</span>
+                  </Button>
+
+                  {/* Likes preview */}
+                  {likes > 0 && (
+                    <div
+                      className="likes-preview d-flex align-items-center cursor-pointer"
+                      onClick={openLikesModal}
+                    >
+                      {likedUsers.slice(0, 3).map((user, index) => (
+                        <OverlayTrigger
+                          key={user._id}
+                          placement="top"
+                          overlay={<Tooltip>{user.username}</Tooltip>}
+                        >
+                          <div
+                            className="user-avatar"
+                            style={{
+                              marginLeft: index > 0 ? "-10px" : "0",
+                              zIndex: 3 - index,
+                            }}
+                          >
+                            {user.profilePicture ? (
+                              <img
+                                src={user.profilePicture}
+                                alt={user.username}
+                                className="rounded-circle"
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  objectFit: "cover",
+                                  border: "2px solid white",
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  border: "2px solid white",
+                                }}
+                              >
+                                <FaUser size={12} />
+                              </div>
+                            )}
+                          </div>
+                        </OverlayTrigger>
+                      ))}
+                      {likedUsers.length > 3 && (
+                        <div
+                          className="bg-light text-dark rounded-circle d-flex align-items-center justify-content-center"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            marginLeft: "-10px",
+                            border: "2px solid white",
+                            zIndex: 1,
+                          }}
+                        >
+                          +{likedUsers.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="sharebookbtn d-flex align-items-center gap-3">
+                  {/* Bookmark Button */}
+                  <Button
+                    variant="light"
+                    onClick={handleBookmark}
+                    title={
+                      bookmarked ? "Remove bookmark" : "Bookmark this post"
+                    }
+                    className={`bookmark-btn ${
+                      bookmarked ? "bookmarked" : ""
+                    } d-flex align-items-center justify-content-center p-2`}
+                  >
+                    {bookmarked ? (
+                      <FaBookmark className="bookmark-icon" />
+                    ) : (
+                      <FaRegBookmark className="bookmark-icon" />
+                    )}
+                    <span className="btn-label ms-2">
+                      {bookmarked ? "Saved" : "Save"}
+                    </span>
+                  </Button>
+
+                  {/* Share Button */}
+                  <Button
+                    variant="light"
+                    className="share-btn d-flex align-items-center justify-content-center p-2"
+                    onClick={handleShare}
+                    disabled={isSharing}
+                  >
+                    <FaShare className="share-icon me-2" />
+                    <span className="btn-label">Share</span>
+                  </Button>
+                </div>
               </div>
             </Card.Body>
           </Card>
 
           {blog.allowComments && (
-            <Card className="mb-4 border-0 shadow-sm">
+            <Card id="comments-section" className="mb-4 border-0 shadow-sm">
               <Card.Body>
                 <Card.Title as="h3" className="mb-4 d-flex align-items-center">
                   <FaComment className="me-2" />
@@ -882,6 +1028,84 @@ const BlogDetails = () => {
             Delete
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* Likes Modal */}
+      <Modal
+        show={showLikesModal}
+        onHide={() => setShowLikesModal(false)}
+        size="md"
+        centered
+      >
+        <Modal.Header className="border-0 position-relative">
+          <Modal.Title className="w-100 text-center">
+            People who liked this post
+          </Modal.Title>
+          <Button
+            variant="link"
+            onClick={() => setShowLikesModal(false)}
+            className="position-absolute end-0 top-0 me-3 mt-2 p-0"
+            style={{ fontSize: "1.5rem" }}
+          >
+            <FaTimes />
+          </Button>
+        </Modal.Header>
+        <Modal.Body style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          {loadingLikes ? (
+            <div className="d-flex justify-content-center py-4">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          ) : likedUsers.length === 0 ? (
+            <div className="text-center py-4">
+              No likes yet. Be the first to like this post!
+            </div>
+          ) : (
+            <div className="list-group">
+              {likedUsers.map((user) => (
+                <div
+                  key={user._id}
+                  className="list-group-item list-group-item-action border-0 py-3"
+                >
+                  <div className="d-flex align-items-center">
+                    <div className="me-3">
+                      {user.profilePicture ? (
+                        <img
+                          src={user.profilePicture}
+                          alt={user.username}
+                          className="rounded-circle"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                          }}
+                        >
+                          <FaUser size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-grow-1">
+                      <h6 className="mb-0 fw-bold">{user.username}</h6>
+                      <small className="text-muted">
+                        {formatCommentDate(user.likedAt)}
+                      </small>
+                    </div>
+                    <div>
+                      <FaThumbsUp className="text-primary" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal.Body>
       </Modal>
     </Container>
   );

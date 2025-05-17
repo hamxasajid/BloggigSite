@@ -44,7 +44,7 @@
 .card-img-container {
   position: relative;
   overflow: hidden;
-  height: 200px;
+  height: 250px;
 }
 
 .card-img-link {
@@ -150,6 +150,6 @@
 
 .topBadge {
   position: absolute;
-  top: 0;
+  top: 5;
   right: 0;
 }

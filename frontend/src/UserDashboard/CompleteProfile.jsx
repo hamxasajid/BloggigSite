@@ -43,7 +43,6 @@ const CompleteProfile = () => {
 
   const navigate = useNavigate();
   const url = "https://bloggigsite-production.up.railway.app";
-  // const url = "http://localhost:5000";
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -205,9 +204,9 @@ const CompleteProfile = () => {
   return (
     <div className="container py-4 min-vh-100">
       <div className="row justify-content-center">
-        <div className="col-12 col-lg-10">
+        <div className="col-12 col-lg-10 ">
           <div className="card shadow-sm border-0 overflow-hidden">
-            <div className="card-header bg-gradient-primary text-white py-4">
+            <div className="card-header bg-info bg-gradient text-white py-4">
               <div className="d-flex flex-column flex-md-row align-items-center justify-content-between">
                 <h2 className="mb-3 mb-md-0">Complete Your Profile</h2>
                 <div className="d-flex">
