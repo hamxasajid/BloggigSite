@@ -44,7 +44,7 @@
 .card-img-container {
   position: relative;
   overflow: hidden;
-  height: 250px;
+  height: 250px !important;
 }
 
 .card-img-link {
@@ -53,7 +53,7 @@
 }
 
 .blog-card img {
-  aspect-ratio: 16/9;
+  aspect-ratio: 16/9 !important;
   height: auto;
   flex-shrink: 0;
   transition: transform 0.5s ease;

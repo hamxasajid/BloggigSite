@@ -153,10 +153,7 @@ const Home = () => {
                     </div>
 
                     {/* Title */}
-                    <h5
-                      className="card-title fw-bold mb-3 line-clamp-2"
-                      style={{ minHeight: "3em" }}
-                    >
+                    <h5 className="card-title fw-bold mb-3 line-clamp-2 h-50">
                       {post.title.slice(0, 55) +
                         (post.title.length > 55 ? "..." : "")}
                     </h5>

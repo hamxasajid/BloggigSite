@@ -130,7 +130,7 @@ const BlogDetails = () => {
     };
 
     fetchData();
-  }, [id, user, likes]);
+  }, [id, likes]);
 
   const handleBookmark = () => {
     const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
@@ -788,8 +788,8 @@ const BlogDetails = () => {
                 dangerouslySetInnerHTML={{ __html: blog.content }}
               />
 
-              <div className="d-flex align-items-center gap-3 mb-4 justify-content-between">
-                <div className="d-flex align-items-center ">
+              <div className="d-flex align-items-center gap-3 mb-4 justify-content-between flex-wrap">
+                <div className="d-flex align-items-center w-md-100">
                   <Button
                     variant={hasLiked ? "primary" : "outline-primary"}
                     onClick={handleLikeToggle}
@@ -863,7 +863,7 @@ const BlogDetails = () => {
                   )}
                 </div>
 
-                <div className="sharebookbtn d-flex align-items-center gap-3">
+                <div class="sharebookbtn d-flex align-items-center gap-3 w-md-100 justify-content-end">
                   {/* Bookmark Button */}
                   <Button
                     variant="light"
